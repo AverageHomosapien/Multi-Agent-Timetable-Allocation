@@ -1,0 +1,80 @@
+package week2exercises;
+import javax.swing.JOptionPane;
+
+public class rand {
+
+	public static void main(String[] args) {
+		int numofpass, numoffails, number;
+	
+		
+		Printwelcome();
+		
+		int mark;
+		String numberasstring;
+		int smallestnumber = 0;
+		int largestnumber = 100;
+		int numMarkstoReadin = 3;
+		int loop =1;
+		
+
+		while(loop <= numMarkstoReadin) {
+			numberasstring = JOptionPane.showInputDialog("please enter a number between " +smallestnumber +" and " + largestnumber);
+			mark = Integer.parseInt(numberasstring);		
+			while( mark < smallestnumber || mark > largestnumber) {
+			
+				numberasstring = JOptionPane.showInputDialog("ERROR - OUT OF RANGE: Please enter a mark between " +smallestnumber +" and " + largestnumber);
+				mark = Integer.parseInt(numberasstring);
+				
+				number = mark;}
+		
+		numoffails=Fail(mark);
+		numofpass=Pass(mark);
+		Display(numofpass,numoffails);
+	
+		}
+		
+		
+		}//end main
+
+	public static void Printwelcome() {
+		String output= "Hello how are you";
+		//print message
+		JOptionPane.showMessageDialog(null, output, "Methods", JOptionPane.INFORMATION_MESSAGE);
+		
+	}
+
+	
+	public static int Fail(int mark) {
+		int numfails = 0;
+		int passmark = 10;
+		
+		if(mark < 10 ) {
+			numfails= numfails +1;
+		}
+		
+		return numfails;
+	}
+
+	public static int Pass(int mark) {
+		int numpasses = 0;
+		int passmark = 10;
+		
+		if(mark > 10 ) {
+			numpasses= numpasses +1;
+		}
+		
+		return numpasses;
+	}
+	
+	public static void Display(int numpass,int numfails) {
+		String output;
+		
+		 output= "The number of passes is " +numpass + " number of fails" +numfails;
+		//print message
+		JOptionPane.showMessageDialog(null, output, "Methods", JOptionPane.INFORMATION_MESSAGE);
+	}
+		
+	
+	
+	
+} //end class

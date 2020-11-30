@@ -1,0 +1,631 @@
+package timetable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import timetable_ontology.TimetableOntology;
+import timetable_ontology.elements.MessageBoard;
+import timetable_ontology.elements.PleasedWith;
+import timetable_ontology.elements.SlotsAvailable;
+import timetable_ontology.elements.SlotsRequested;
+import timetable_ontology.elements.SwapFinal;
+import timetable_ontology.elements.SwapInitial;
+import timetable_ontology.elements.Timeslot;
+import timetable_ontology.elements.TutorialGroup;
+import timetable_ontology.elements.UnhappySlot;
+import jade.content.Concept;
+import jade.content.ContentElement;
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+
+// Timetabling agent
+public class TTAGENTCOPY extends Agent{
+	private Codec codec = new SLCodec();
+	private Ontology ontology = TimetableOntology.getInstance();
+
+	private MessageBoard messageBoard = new MessageBoard(); // WHEN MESSAGEBOARD PASSED - NEED TO TAKE ALL ELEMENTS OF THIS BOARD AND ADD THEM TO A NEW BOARD
+	
+	// Keep the 'happy students' since you could run over them in theory to check if there's a few unhappy agents left..
+	// 		..may find an even better slot
+	private List<AID> happyAgents = new ArrayList<AID>(); // StudentAgents 'happy' with their tutorial assignment
+	private List<AID> unhappyAgents = new ArrayList<AID>(); // StudentAgents 'unhappy' with their tutorial assignment
+	private List<AID> happierAgents = new ArrayList<AID>(); // Agents not quite happy yet, but they happy after a loop
+	
+	@Override
+	protected void setup() {
+		//register();
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
+		doWait(5000); // Wait for student agents to load -- Traditionally wait 30000
+		//addBehaviour(new FindStudentsBehaviour(this)); // Finds the students
+		//addBehaviour(new SwapStudentSlotBehaviour()); // Runs the Student Swapping Behaviour
+	}
+	/*
+	// Finds the Student Agents and adds them to the UnhappyAgents list
+	public class FindStudentsBehaviour extends OneShotBehaviour {
+		public FindStudentsBehaviour(Agent a) {
+			super(a);
+		}
+		@Override
+		public void action() {
+			
+			DFAgentDescription studentTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("student-agent");
+			studentTemplate.addServices(sd);
+			
+			try{
+				unhappyAgents.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,studentTemplate); 
+				for(int i=0; i<agentsType1.length; i++){
+					unhappyAgents.add(agentsType1[i].getName()); // this is the AID
+				}
+				
+				
+				// ADD TO MESSAGEBOARD
+				SwapInitial si = new SwapInitial();
+				si.setAgentFrom(unhappyAgents.get(1));
+				
+				TutorialGroup tg = new TutorialGroup();
+				Timeslot ts = new Timeslot();
+				
+				ts.setDay(1); // Tues First
+				ts.setTime(0);
+				
+				tg.setTutorialID("SET01010"); // SET101012
+				tg.setClassNo(4);
+				tg.setClassSize(1);
+				tg.setTimeslot(ts);
+				
+				si.setTutorial(tg);
+				messageBoard.addToMessageBoard(si);
+				
+				si = new SwapInitial();
+				si.setAgentFrom(unhappyAgents.get(0));
+				
+				tg = new TutorialGroup();
+				ts = new Timeslot();
+				
+				ts.setDay(2); // Tues First
+				ts.setTime(0);
+				
+				tg.setTutorialID("SET01010"); // SET10101
+				tg.setClassNo(4);
+				tg.setClassSize(1);
+				tg.setTimeslot(ts);
+				
+				si.setTutorial(tg);
+				messageBoard.addToMessageBoard(si);
+				
+			}
+			catch(FIPAException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/*
+	// Runs the Student Swapping Behaviour for the whole agent
+	public class SwapStudentSlotBehaviour extends Behaviour {
+		
+		@Override
+		public void action() {
+			for (AID agent : unhappyAgents) {
+				SequentialBehaviour dailyActivity = new SequentialBehaviour();
+				myAgent.addBehaviour(dailyActivity);
+				dailyActivity.addSubBehaviour(new InitiateStudentBehaviour(agent)); // Notifies the swapperAgent they're 'live'
+				dailyActivity.addSubBehaviour(new AwaitSlotBehaviour()); // Listens for the slot response of swapperAgent
+				dailyActivity.addSubBehaviour(new VerifySlotBehaviour()); // Verifies slot with swappedAgent
+				dailyActivity.addSubBehaviour(new AwaitSlotVerifyBehaviour()); // Listens for response from swappedAgent
+				dailyActivity.addSubBehaviour(new InitiateSlotVerifyBehaviour()); // Initiates response verification with swapperAgent
+				dailyActivity.addSubBehaviour(new InitiateSlotSwitchBehaviour(agent)); // Asks for a slot the swapperAgent wishes to add to the messageboard
+				
+				AwaitSlotSwitchBehaviour assb = new AwaitSlotSwitchBehaviour();
+				dailyActivity.addSubBehaviour(assb);  // Waits for response of swapperAgent
+				if (assb.onEnd() == 1) {
+					happierAgents.add(agent);
+				}
+				doWait(500);
+				System.out.println("Bottom of Behaviour loop");
+			}
+			addBehaviour(new UpdateHappyAgents()); // Checks which agents are 'happy' and updates
+		
+			for (AID a : happyAgents) {
+				System.out.println(a.getLocalName() + " is a HAPPY AGENT");
+			}
+		}
+
+		@Override
+		public boolean done() {
+			if (unhappyAgents.size() > 0) {
+				System.out.println("END OF LOOP");
+				return false;
+			}
+			System.out.println("We're done swapping timetabled agents");
+			return true;
+		}
+	}
+	
+	
+	// Runs the Student Swapping Behaviour for the whole agent
+	public class SwapStudentSlotBehaviour extends Behaviour {
+		private AID currentAgent;
+		private int studentIndex = 0;
+		private int step = 0;
+		private SlotsRequested slotsRequested; // Slots requested by StudentAgent
+		private SlotsRequested slotsConfirmed; // Slots confirmed by TimetablingAgent
+		
+		public SwapStudentSlotBehaviour() {
+			
+		}
+		
+		@Override
+		public void action() {
+			switch(step) {
+			case 0:
+				currentAgent = unhappyAgents.get(studentIndex);
+				addBehaviour(new InitiateStudentBehaviour(currentAgent)); // Notifies the swapperAgent they're 'live'
+
+				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("swapConfirm"),
+						MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
+				ACLMessage msg = myAgent.receive(swapConfirmMt); 
+				if (msg != null) {
+					System.out.println("INSIDE AwaitSlotBehaviour");
+					try {
+						ContentElement ce = getContentManager().extractContent(msg);
+						if (ce instanceof SlotsRequested) {
+							slotsRequested = ((SlotsRequested)ce);
+							step++;
+						}
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else {
+					block();
+				}
+				break;
+			case 1:
+				addBehaviour(new VerifySlotBehaviour()); // Verifies slot with swappedAgent
+				
+				MessageTemplate swapRequestFinalMt = MessageTemplate.and(MessageTemplate.MatchConversationId("swapRequestFinal"),
+						MessageTemplate.MatchSender(currentAgent)); // Listens for response from swappedAgent
+				msg = myAgent.receive(swapRequestFinalMt); 
+				if (msg != null) {
+					System.out.println("INSIDE AwaitSlotVerifyBehaviour");
+					try {
+						ContentElement ce = getContentManager().extractContent(msg);
+						if (ce instanceof SwapFinal) {
+							SwapFinal swapRequest = (SwapFinal) ce;
+							if (msg.getPerformative() == ACLMessage.AGREE) {
+								slotsConfirmed.addSlot(swapRequest);
+							}
+							step++;
+						}
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else {
+					block();
+				}
+				break;
+			case 2:
+				boolean happy = false;
+				
+				addBehaviour(new InitiateSlotVerifyBehaviour()); // Initiates response verification with swapperAgent
+				doWait(200);
+				addBehaviour(new InitiateSlotSwitchBehaviour(currentAgent)); // Asks for a slot the swapperAgent wishes to add to the messageboard
+				
+				MessageTemplate SlotRequestMt = MessageTemplate.and(MessageTemplate.MatchConversationId("slotRequest"),
+							MessageTemplate.MatchSender(currentAgent));
+				msg = myAgent.receive(SlotRequestMt); 
+				if (msg != null) {
+					System.out.println("INSIDE AwaitSlotSwitchBehaviour");
+					
+					try {
+						ContentElement ce = getContentManager().extractContent(msg);
+						System.out.println("RECEIVED SLOT SWITCH BEHAVIOUR");
+						if (ce instanceof Action) {
+							System.out.println("UNHAPPY");
+							
+							Concept action = ((Action)ce).getAction();
+							
+							if (action instanceof UnhappySlot) {
+								UnhappySlot slot = (UnhappySlot) action;
+								SwapInitial initSwap = slot.getSlotToSwap();
+								if (!messageBoard.getMessageBoard().contains(initSwap)) {
+									messageBoard.addToMessageBoard(initSwap);
+								}
+							}
+						}
+						else if (ce instanceof PleasedWith) { // Agent is pleased with slot
+							System.out.println("HAPPY");
+							happy = true;
+						}
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else {
+					block();
+				}
+				
+				
+				// If happy, add to happier list increment student index -- DONT WANT TO CHANGE INDEX UNTIL FINISHED WORKING WITH ACTIVELIST??
+				if (happy) {
+					happierAgents.add(currentAgent);
+				}
+				//else
+				
+				
+				doWait(1000);
+				System.out.println("Bottom of Behaviour loop");
+				break;
+			}
+			step = 0;
+		}
+
+		@Override
+		public boolean done() {
+			if (unhappyAgents.size() > 0) {
+				System.out.println("END OF LOOP");
+				return false;
+			}
+			System.out.println("We're done swapping timetabled agents");
+			return true;
+		}
+	}
+	
+	// Notifies the swapperAgent they're 'live'
+	// Receives a done message if students are finished their activity
+	public class InitiateStudentBehaviour extends OneShotBehaviour {
+		private AID studentAid;
+		
+		// Called at the moment the behaviour is added
+		public InitiateStudentBehaviour (AID studentAgent) {
+			this.studentAid = studentAgent;
+		}
+		
+		@Override
+		public void action() {
+			System.out.println("INSIDE InitiateStudentBehaviour");
+			List<SwapInitial> siList = new ArrayList<SwapInitial>();
+			
+			for (SwapInitial m : messageBoard.getMessageBoard()) {
+				siList.add(m);
+			}
+			MessageBoard mb = new MessageBoard();
+			mb.setMessageBoard(siList);
+			
+			SlotsAvailable available = new SlotsAvailable();
+			available.setBoard(mb);
+
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.addReceiver(studentAid);
+			msg.setConversationId("messageBoard");
+			msg.setLanguage(codec.getName());
+			msg.setOntology(ontology.getName());
+						
+			try {
+				getContentManager().fillContent(msg, available);
+				send(msg);
+			}
+			catch (CodecException ce) {
+				ce.printStackTrace();
+			}
+			catch (OntologyException oe) {
+				oe.printStackTrace();
+			} 
+		}
+	}
+	
+	
+	// Awaits the Student Agent response for the SwapBehaviour request
+	public class AwaitSlotBehaviour extends Behaviour {
+		boolean behaviourDone = false;
+		
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchConversationId("swapConfirm");
+			ACLMessage msg = myAgent.receive(mt); 
+			if (msg != null) {
+				System.out.println("INSIDE AwaitSlotBehaviour");
+				try {
+					ContentElement ce = getContentManager().extractContent(msg);
+					if (ce instanceof SlotsRequested) {
+						slotsRequested = ((SlotsRequested)ce);
+						behaviourDone = true;
+					}
+				}
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
+		}
+
+		@Override
+		public boolean done() {
+			//System.out.println("NOT DONE AWAIT SLOT");
+			return behaviourDone;
+		}
+		
+	}
+	
+	
+	// Confirms the validity of the slots requested with other agents
+	public class VerifySlotBehaviour extends OneShotBehaviour {
+
+		@Override
+		public void action() {
+			slotsConfirmed = new SlotsRequested();
+			System.out.println("INSIDE VerifySlotBehaviour");
+			for (SwapFinal swap : slotsRequested.getSlots()) {
+				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+				msg.setLanguage(codec.getName());
+				msg.setOntology(ontology.getName());
+				msg.addReceiver(swap.getInitalSwapRequest().getAgentFrom());
+				msg.setConversationId("swapRequestFinal");
+				
+				Action action = new Action();
+				action.setAction(swap);
+				action.setActor(getAID()); // set itself as the actor - since it's requesting final swap?
+				
+				try {
+					getContentManager().fillContent(msg, swap);
+					send(msg);
+				}
+				catch(CodecException codecE) {
+					codecE.printStackTrace();
+				}
+				catch(OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	
+	// Waits for the response of agents being verified
+	public class AwaitSlotVerifyBehaviour extends Behaviour {
+		int numResponsesReceived = 0;
+		
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchConversationId("swapRequestFinal");
+			ACLMessage msg = myAgent.receive(mt); 
+			if (msg != null) {
+				System.out.println("INSIDE AwaitSlotVerifyBehaviour");
+				try {
+					ContentElement ce = getContentManager().extractContent(msg);
+					if (ce instanceof SwapFinal) {
+						SwapFinal swapRequest = (SwapFinal) ce;
+						if (msg.getPerformative() == ACLMessage.AGREE) {
+							slotsConfirmed.addSlot(swapRequest);
+						}
+					}
+				}
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
+		}
+
+		@Override
+		public boolean done() {
+			return (numResponsesReceived >= slotsRequested.getSlots().size());
+		}
+		
+	}
+	
+	
+	// Initiates response verification with the swapperAgent
+	public class InitiateSlotVerifyBehaviour extends OneShotBehaviour {
+
+		@Override
+		public void action() {
+			try {
+				System.out.println("INSIDE InitiateSlotVerifyBehaviour");
+				
+				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+				msg.setLanguage(codec.getName());
+				msg.setOntology(ontology.getName());
+				msg.addReceiver(slotsConfirmed.getSlots().get(0).getAgentTo());
+				msg.setConversationId("swapConfirm");
+				
+				getContentManager().fillContent(msg, slotsConfirmed);
+				send(msg);
+			}
+			catch(CodecException codecE) {
+				codecE.printStackTrace();
+			}
+			catch(OntologyException oe) {
+				oe.printStackTrace();
+			}
+		}
+	}
+		
+	
+	// Asks for a slot the SwapperAgent wishes to add to the messageboard
+	public class InitiateSlotSwitchBehaviour extends OneShotBehaviour {
+		AID receiver;
+		
+		public InitiateSlotSwitchBehaviour(AID receiver) {
+			this.receiver = receiver;
+		}
+		
+		@Override
+		public void action() {
+			try {
+				System.out.println("INSIDE InitiateSlotSwitchBehaviour");
+				
+				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+				msg.setLanguage(codec.getName());
+				msg.setOntology(ontology.getName());
+				msg.addReceiver(receiver);
+				msg.setConversationId("slotRequest");
+				
+				UnhappySlot slot = new UnhappySlot();
+				
+				Action action = new Action();
+				action.setAction(slot);
+				action.setActor(getAID());
+				
+				getContentManager().fillContent(msg, action);
+				send(msg);
+			}
+			catch(CodecException codecE) {
+				codecE.printStackTrace();
+			}
+			catch(OntologyException oe) {
+				oe.printStackTrace();
+			}
+		}
+		
+	}
+	
+	
+	// Waits for response of swapperAgent -- Happy? or does it have another slot to add
+	public class AwaitSlotSwitchBehaviour extends Behaviour {
+		private int happy = 0;
+		private boolean isDone = false;
+		
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchConversationId("slotRequest");
+			ACLMessage msg = myAgent.receive(mt); 
+			if (msg != null) {
+				System.out.println("INSIDE AwaitSlotSwitchBehaviour");
+				
+				try {
+					ContentElement ce = getContentManager().extractContent(msg);
+					System.out.println("RECEIVED SLOT SWITCH BEHAVIOUR");
+					if (ce instanceof Action) {
+						System.out.println("UNHAPPY");
+						
+						Concept action = ((Action)ce).getAction();
+						
+						if (action instanceof UnhappySlot) {
+							UnhappySlot slot = (UnhappySlot) action;
+							SwapInitial initSwap = slot.getSlotToSwap();
+							if (!messageBoard.getMessageBoard().contains(initSwap)) {
+								messageBoard.addToMessageBoard(initSwap);
+							}
+						}
+					}
+					else if (ce instanceof PleasedWith) { // Agent is pleased with slot
+						System.out.println("HAPPY");
+						happy = 1;
+					}
+					isDone = true;
+				}
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
+			
+		}
+		
+		@Override
+		public boolean done() {
+			return isDone;
+		}
+		
+		public int onEnd() {
+			return happy;
+		}
+	}
+		
+	
+	// Checks if 'unhappy agents' are now 'happy agents' and updates
+	public class UpdateHappyAgents extends OneShotBehaviour {
+
+		@Override
+		public void action() {
+			System.out.println("Checking aids in unhappy Aids");
+			// Update the happy agents list
+			for (AID agent : happierAgents) {
+				unhappyAgents.remove(agent);
+				happyAgents.add(agent);
+			}
+			
+			happierAgents.clear();
+		}
+	}
+	
+	
+	public class EmptyBehaviour extends OneShotBehaviour {
+		public void action() {}
+	} // END OF EMPTY
+	
+	
+	// Register with the DFD
+	protected void register() {
+		DFAgentDescription dfd = new DFAgentDescription ();
+		dfd.setName(getAID());
+		
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("timetabling-agent");
+		sd.setName( getLocalName() + "-timetabling-agent");
+		dfd.addServices(sd);
+		
+		try{
+			DFService.register(this , dfd);
+			System.out.println("Timetabling agent registered");
+		}
+		catch(FIPAException e) {
+			e.printStackTrace() ;
+		}
+	}
+
+	
+	
+	// Gets the first test case arguments
+	private void getArgs1(){
+		Object[][] args = (Object[][]) getArguments();
+		TutorialGroup _tut = new TutorialGroup();
+		_tut.setTutorial((String) args[0][0]);
+		_tut.setClasses((Integer) args[0][1]);
+		Tutorials.add(_tut);
+	}
+	*/
+}

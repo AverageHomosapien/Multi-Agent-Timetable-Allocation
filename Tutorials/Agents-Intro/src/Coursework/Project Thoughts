@@ -1,0 +1,42 @@
+Project Thoughts and Information:
+
+
+[0-5 preference array for each time for each student]
+Scored array based on preference score and times
+Times that the student agent has
+Threshold which student is 'happy to proceed' but will still request swapping until program over?
+
+Query if - Inform (query if timetable slot available)
+Propose - Accept-Proposal / Decline-Proposal (Requesting to move slot)
+
+40 slots across 5 days - translates 09:00 - 17:00
+Try 1 slot, move to 3 slots per week per student?
+
+AGENT BASED TECHNIQUE PAPER
+Used 2 ontologies: timetable ontology, a Student Request ontology
+
+Timetable agent initiates timetable
+Timetable agent assigns timetables to students
+Students review timetables
+Students with time preferences not yet met query-if the timetable slot is available
+Timetable agent Informs (event full or not)
+If event full, student broadcasts message to all students requesting swap
+Student_responder responds if they can make the swap
+
+
+How to know when timetable is finished? Not time, based on students 'happy' with their timetable times?
+
+COURSEWORK SPECIFICATION
+Students allocated to 1 tutorial group for each module
+3 tutorials per student per week?
+Limited number of spaces for each tutorial group
+Minimum Student Preferences: Timeslots they can't attend, timeslots they'd prefer not to attend, timeslots they'd like to attend
+
+Need:
+Ontology that lets agents communicate
+Communication protocol (inc. sequence diagrams etc)
+A student utility function
+A strategy which determines which exchange requests to make, which to accept from others and which to reject
+A metric to evaluate the system effectiveness
+
+((More required for the report))	

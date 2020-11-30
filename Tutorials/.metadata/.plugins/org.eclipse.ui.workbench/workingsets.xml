@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workingSetManager>
+<workingSet editPageId="org.eclipse.mylyn.tasks.ui.workingSet" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1601981945810_1" label="Multi-Agent Systems" name="Multi-Agent Systems">
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Agents-Intro" type="4"/>
+</workingSet>
+<workingSet editPageId="org.eclipse.jdt.ui.JavaWorkingSetPage" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1601982034256_2" label="Software Development 1" name="Software Development 1">
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Week2" type="4"/>
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Week3" type="4"/>
+</workingSet>
+<workingSet aggregate="true" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1600676230483_0" label="Window Working Set" name="Aggregate for window 1600676230483"/>
+<mruList name="Multi-Agent Systems"/>
+</workingSetManager>

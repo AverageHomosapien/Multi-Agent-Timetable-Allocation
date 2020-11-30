@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/Agents-Intro/src/week1/_TenSimpleAgents.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="week1._TenSimpleAgents"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-gui jade.Book &lt;agent nickname&gt;:&lt;package name&gt;.&lt;agent class name&gt;"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="Agents-Intro"/>
+</launchConfiguration>

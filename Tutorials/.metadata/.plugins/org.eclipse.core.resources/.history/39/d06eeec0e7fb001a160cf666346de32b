@@ -1,0 +1,16 @@
+public class RunAgents {
+
+	public static void main(String[] args) {
+		Profile myProfile = new ProfileImpl () ;
+		Runtime myRuntime = Runtime . instance () ;
+		ContainerController myContainer = myRuntime . createMainContainer (
+		myProfile ) ;
+		AgentController rma = myContainer . createNewAgent ("rma", " jade . tools
+		.rma.rma", null ) ;
+		rma . start () ;
+		
+		// TODO Auto-generated method stub
+		SimpleAgent agent = new SimpleAgent();
+	}
+
+}
