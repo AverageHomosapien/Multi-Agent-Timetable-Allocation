@@ -14,7 +14,6 @@ import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -37,12 +36,13 @@ import timetable_ontology.elements.UnhappySlot;
 public class StudentAgent extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = TimetableOntology.getInstance();
-	private AID timetableAgent;
 	MessageBoard slotsMessageBoard;
 	
 	private int[][] SlotPreferences;
 	private TutorialGroup[] CurrentTutorials;
 	private int messagesSent = 0;
+	private double meanHappinessTarget = 1.04;
+	private double minMeanHappinessTarget = 0.6;
 
 	
 	@Override
@@ -55,7 +55,6 @@ public class StudentAgent extends Agent{
 		SlotPreferences = (int[][]) arguments[0];
 		CurrentTutorials = (TutorialGroup[]) arguments[1];
 		
-		addBehaviour(new FindTimetablerBehaviour());
 		addBehaviour(new AwaitTimetableBehaviour()); // Slots requested by timetable agent
 		addBehaviour(new AwaitSlotVerifyBehaviour()); // Checks the slot request from timetable agent
 		addBehaviour(new AwaitHappyBehaviour()); // Takes in the slots confirmed by the timetable agent and confirms if happy/slot to give
@@ -123,7 +122,9 @@ public class StudentAgent extends Agent{
 							wishedSlots.setSlots(swapsRequested);
 							
 							ACLMessage reply = msg.createReply();
+							reply.setPerformative(ACLMessage.INFORM);
 							try {
+								System.out.println("2: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								getContentManager().fillContent(reply, wishedSlots);
 								send(reply);
 							}
@@ -135,17 +136,17 @@ public class StudentAgent extends Agent{
 							SlotsRequested wishedSlots = new SlotsRequested();
 							wishedSlots.setSlots(new ArrayList<>());
 							ACLMessage reply = msg.createReply(); // 0 wished slots 
+							reply.setPerformative(ACLMessage.INFORM);
 							try {
 								getContentManager().fillContent(reply, wishedSlots);
+								System.out.println("2: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								send(reply);
 							}
 							catch (Exception e) {
 								e.printStackTrace();
 							}
-							
 						}
 					}
-				
 				}
 				catch(Exception e) {
 					e.printStackTrace();
@@ -203,6 +204,7 @@ public class StudentAgent extends Agent{
 							
 							try {
 								getContentManager().fillContent(reply, actionReply);
+								System.out.println("4: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								send(reply);
 							}
 							catch(CodecException codecE) {
@@ -263,8 +265,13 @@ public class StudentAgent extends Agent{
 							meanHappiness /= CurrentTutorials.length;
 							System.out.println(getAID().getLocalName() + " - Happiness is " + meanHappiness);
 							
+							// Reducing happiness required each run
+							if (meanHappinessTarget > minMeanHappinessTarget) {
+								meanHappinessTarget -= 0.02;
+							}
+							
 							// If high enough overall happiness -- 0 or 1 slots accepted
-							if (meanHappiness <= 0.5) {
+							if (meanHappiness <= meanHappinessTarget) {
 								System.out.println(getAID().getLocalName() + " - Unhappy with slots");
 								
 								// Checking slots that haven't been advertised yet
@@ -296,7 +303,6 @@ public class StudentAgent extends Agent{
 									} // Pass to TimetablingAgent and check it's not on MessageBoard already
 								}
 								
-								
 								UnhappySlot slot = new UnhappySlot();
 								
 								SwapInitial si = new SwapInitial();
@@ -309,8 +315,10 @@ public class StudentAgent extends Agent{
 								newAction.setAction(slot);
 								
 								ACLMessage reply = msg.createReply();
+								reply.setPerformative(ACLMessage.REFUSE);
 								
 								try {
+									System.out.println("6: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 									getContentManager().fillContent(reply, newAction);
 									send(reply);
 								}
@@ -326,10 +334,13 @@ public class StudentAgent extends Agent{
 								
 								PleasedWith pleased = new PleasedWith();
 								pleased.setStudent(getAID());
+								reply.setPerformative(ACLMessage.AGREE);
 								
 								try {
 									getContentManager().fillContent(reply, pleased);
+									System.out.println("6: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 									send(reply);
+									System.out.println("DEAD HAPPINESS FOR " + getAID().getLocalName() + " IS " + meanHappiness);
 									doDelete();
 								}
 								catch(CodecException codecE) {
@@ -338,9 +349,7 @@ public class StudentAgent extends Agent{
 								catch(OntologyException oe) {
 									oe.printStackTrace();
 								}
-								
 							}
-							
 						}
 					}
 				}
@@ -358,27 +367,11 @@ public class StudentAgent extends Agent{
 	}
 	
 	
-	// Finds the Student Agents and adds them to the UnhappyAgents list
-	public class FindTimetablerBehaviour extends OneShotBehaviour {
-		
-		@Override
-		public void action() {
-			DFAgentDescription timetablerTemplate = new DFAgentDescription();
-			ServiceDescription sd = new ServiceDescription();
-			sd.setType("timetabling-agent");
-			timetablerTemplate.addServices(sd);
-			try{
-				DFAgentDescription[] ttAgent  = DFService.search(myAgent,timetablerTemplate); 
-				timetableAgent = ttAgent[0].getName();
-			}
-			catch(FIPAException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
 	// Returns the fitness of any time slot for the agent
 	private double SlotFitness(Timeslot slot) {
+		if (SlotPreferences[slot.getDay()][slot.getTime()]==5) { // Punished heavily for having a negative slot
+			return -5.0; 
+		}
 		return (1.0 / (SlotPreferences[slot.getDay()][slot.getTime()] + 1));
 	}
 	

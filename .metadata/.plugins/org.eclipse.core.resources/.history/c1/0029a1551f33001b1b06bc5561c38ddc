@@ -1,0 +1,8 @@
+package classtest;
+
+public class nonPrivateVar {
+
+	public static void main(String[] args) {
+		
+	}
+}

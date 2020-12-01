@@ -17,8 +17,8 @@ public class Main {
 	public static void main(String[] args) {
 		Profile myProfile = new ProfileImpl();
 		Runtime myRuntime = Runtime.instance();
-		int STUDENT_NUMBER = 30; // NUMBER OF STUDENT AGENTS TO BE CREATED
-		int TESTRUNCHOICE = 3; // OPTION OF PRORGAM TO RUN
+		int STUDENT_NUMBER = 2; // NUMBER OF STUDENT AGENTS TO BE CREATED
+		int TESTRUNCHOICE = 0; // OPTION OF PRORGAM TO RUN
 
 		Object[] passerArgs1 = new Object[2];
 		Object[] passerArgs2 = new Object[2];

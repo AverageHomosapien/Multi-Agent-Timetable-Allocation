@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import jade.content.Predicate;
 import jade.content.onto.annotations.Slot;
 
-public class SlotsRequested implements Predicate{
+public class SlotsRequested implements Predicate {
 
 	private ArrayList<SwapFinal> slots;
 	

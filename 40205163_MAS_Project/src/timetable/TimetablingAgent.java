@@ -51,7 +51,7 @@ public class TimetablingAgent extends Agent{
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
-		doWait(5000); // Wait for student agents to load -- Traditionally wait 30000
+		doWait(14000); // Wait for student agents to load -- Traditionally wait 30000
 		addBehaviour(new FindStudentsBehaviour(this)); // Finds the students
 		addBehaviour(new SwapStudentSlotBehaviour()); // Runs the Student Swapping Behaviour
 	}
@@ -125,6 +125,8 @@ public class TimetablingAgent extends Agent{
 				slotsConfirmed.setSlots(new ArrayList<>()); // Setting slotsConfirmed slots
 				slotsDenied.setSlots(new ArrayList<>());
 				
+				// This allows the Timetable Agent to only ask for slots if slots have been selected
+				// (Reduced message passing)
 				if (slotsRequested.getSlots().size() == 0) { // Go to next step if slots don't need confirmed
 					System.out.println("No slots. Proceed to confirming if agent is happy/slots to swap");
 					step=4;
@@ -245,7 +247,6 @@ public class TimetablingAgent extends Agent{
 					}else {
 						studentIndex++;
 					}
-					
 				}
 				break;
 			}
@@ -301,6 +302,7 @@ public class TimetablingAgent extends Agent{
 						
 			try {
 				getContentManager().fillContent(msg, available);
+				System.out.println("1: TT Content is: " + msg.getContent());
 				send(msg);
 			}
 			catch (CodecException ce) {
@@ -336,6 +338,7 @@ public class TimetablingAgent extends Agent{
 				
 				try {
 					getContentManager().fillContent(msg, action);
+					System.out.println("3: TT Content is: " + msg.getContent());
 					send(msg);
 				}
 				catch(CodecException codecE) {
@@ -345,7 +348,6 @@ public class TimetablingAgent extends Agent{
 					oe.printStackTrace();
 				}
 			}
-			
 		}
 	}
 
@@ -381,6 +383,7 @@ public class TimetablingAgent extends Agent{
 				action.setActor(getAID());
 				
 				getContentManager().fillContent(msg, action);
+				System.out.println("5: TT Content is: " + msg.getContent());
 				send(msg);
 			}
 			catch(CodecException codecE) {

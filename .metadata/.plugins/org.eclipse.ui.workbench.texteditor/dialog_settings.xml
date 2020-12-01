@@ -2,26 +2,27 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="UnhappySl" key="selection"/>
+		<item value="InitiateStudentBehaviour" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="InitiateStudentBehaviour"/>
+			<item value="timetableAgen"/>
+			<item value="timetable"/>
+			<item value="SwapIni"/>
+			<item value="swapIni"/>
+			<item value="pleasedwi"/>
 			<item value="unhappysl"/>
 			<item value="unhappy"/>
 			<item value="pleasedwith"/>
 			<item value="initiateStu"/>
 			<item value="HappyWith"/>
 			<item value="sys"/>
-			<item value="swapIni"/>
 			<item value="System"/>
 			<item value="system"/>
 			<item value="SlotsAva"/>
-			<item value="slotsava"/>
-			<item value="pleased"/>
-			<item value="happywith"/>
-			<item value="attends"/>
 		</list>
 		<list key="replacehistory">
 		</list>
