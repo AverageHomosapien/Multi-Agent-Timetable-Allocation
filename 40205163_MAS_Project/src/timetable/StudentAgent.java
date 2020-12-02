@@ -41,8 +41,8 @@ public class StudentAgent extends Agent{
 	private int[][] SlotPreferences;
 	private TutorialGroup[] CurrentTutorials;
 	private int messagesSent = 0;
-	private double meanHappinessTarget = 1.04;
-	private double minMeanHappinessTarget = 0.6;
+	private double meanHappinessTarget = 1.50;
+	private double minMeanHappinessTarget = 0.5;
 
 	
 	@Override
@@ -97,7 +97,6 @@ public class StudentAgent extends Agent{
 								}
 							}
 							
-							
 							SlotsRequested wishedSlots = new SlotsRequested();
 							SwapFinal swapRequest;
 							ArrayList<SwapFinal> swapsRequested = new ArrayList<>();
@@ -139,7 +138,6 @@ public class StudentAgent extends Agent{
 							reply.setPerformative(ACLMessage.INFORM);
 							try {
 								getContentManager().fillContent(reply, wishedSlots);
-								System.out.println("2: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								send(reply);
 							}
 							catch (Exception e) {
@@ -180,15 +178,13 @@ public class StudentAgent extends Agent{
 							int count = 0;
 							for (TutorialGroup tutorial : CurrentTutorials) {
 								if (tutorial.getTutorialID().equals(swapRequest.getTutorialTo().getTutorialID())) { // IF THE SAME TUTORIAL
-									if (SlotFitness(tutorial.getTimeslot()) < SlotFitness(swapRequest.getTutorialTo().getTimeslot())) {
+									if (SlotFitness(tutorial.getTimeslot()) <= SlotFitness(swapRequest.getTutorialTo().getTimeslot())) { // If indifferent or prefers
 										reply.setPerformative(ACLMessage.AGREE); // Agree because want to swap slot
-										System.out.println(getAID().getLocalName() + " - Agreed to the slot switch");
 										CurrentTutorials[count] = swapRequest.getTutorialTo();
 										break;
 									}
 									else {
 										reply.setPerformative(ACLMessage.REFUSE); // Refuse because not interested
-										System.out.println(getAID().getLocalName() + " - Refused the slot switch");
 										break;
 									}
 								}
@@ -204,7 +200,6 @@ public class StudentAgent extends Agent{
 							
 							try {
 								getContentManager().fillContent(reply, actionReply);
-								System.out.println("4: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								send(reply);
 							}
 							catch(CodecException codecE) {
@@ -262,8 +257,8 @@ public class StudentAgent extends Agent{
 							for (int i = 0; i < CurrentTutorials.length; i++) {
 								meanHappiness += SlotFitness(CurrentTutorials[i].getTimeslot());
 							}
+							
 							meanHappiness /= CurrentTutorials.length;
-							System.out.println(getAID().getLocalName() + " - Happiness is " + meanHappiness);
 							
 							// Reducing happiness required each run
 							if (meanHappinessTarget > minMeanHappinessTarget) {
@@ -272,7 +267,6 @@ public class StudentAgent extends Agent{
 							
 							// If high enough overall happiness -- 0 or 1 slots accepted
 							if (meanHappiness <= meanHappinessTarget) {
-								System.out.println(getAID().getLocalName() + " - Unhappy with slots");
 								
 								// Checking slots that haven't been advertised yet
 								List<Integer> slotsNotAdvertised = new ArrayList<>();
@@ -281,22 +275,25 @@ public class StudentAgent extends Agent{
 								for (int i = 0; i < CurrentTutorials.length; i++) {
 									boolean advertisedAlready = false;
 									for (SwapInitial item : slotsMessageBoard.getMessageBoard()) {
-										if (item.getAgentFrom().equals(getAID()) && item.getTutorial().getTutorialID() == item.getTutorial().getTutorialID()) {
+										if (item.getAgentFrom().equals(getAID()) && item.getTutorial().getTutorialID().equals(CurrentTutorials[i].getTutorialID())) {
 											advertisedAlready = true;
 											continue;
 										}
 									}
 									if (!advertisedAlready) {
-										slotsNotAdvertised.add(i);
+										if (SlotFitness(CurrentTutorials[i].getTimeslot()) < 1.0) { // Don't post if already happy with slot - but can exchange for slot on board
+											slotsNotAdvertised.add(i); // Was out of bounds error
+										}
 									}
 								}
 								
-								int worstTutorial = 0;
+								int worstTutorial = -1; // Worst tutorial is positional ref to slotsNotAdvertised
 								
 								// Comparing slots - if nothing on board then just send slot and have it denied by TTAgent
-								if (slotsNotAdvertised.size() > 0) {
+								if (slotsNotAdvertised.size() > 0) { 
+									worstTutorial = 0;
 									// Select worst slot not currently on timetable
-									for (int i = 0; i < slotsNotAdvertised.size(); i++) {
+									for (int i = 1; i < slotsNotAdvertised.size(); i++) {
 										if (SlotFitness(CurrentTutorials[slotsNotAdvertised.get(i)].getTimeslot()) < SlotFitness(CurrentTutorials[slotsNotAdvertised.get(worstTutorial)].getTimeslot())) {
 											worstTutorial = i;
 										}
@@ -304,11 +301,12 @@ public class StudentAgent extends Agent{
 								}
 								
 								UnhappySlot slot = new UnhappySlot();
-								
-								SwapInitial si = new SwapInitial();
-								si.setAgentFrom(myAgent.getAID());
-								si.setTutorial(CurrentTutorials[worstTutorial]);
-								slot.setSlotToSwap(si);
+								if (worstTutorial != -1) {
+									SwapInitial si = new SwapInitial();
+									si.setAgentFrom(myAgent.getAID());
+									si.setTutorial(CurrentTutorials[slotsNotAdvertised.get(worstTutorial)]);
+									slot.setSlotToSwap(si);
+								}
 								
 								Action newAction = new Action();
 								newAction.setActor(getAID());
@@ -318,7 +316,6 @@ public class StudentAgent extends Agent{
 								reply.setPerformative(ACLMessage.REFUSE);
 								
 								try {
-									System.out.println("6: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 									getContentManager().fillContent(reply, newAction);
 									send(reply);
 								}
@@ -329,18 +326,16 @@ public class StudentAgent extends Agent{
 									oe.printStackTrace();
 								}
 							}else {
-								System.out.println(getAID().getLocalName() + " - Happy with slots!");
 								ACLMessage reply = msg.createReply();
-								
 								PleasedWith pleased = new PleasedWith();
 								pleased.setStudent(getAID());
 								reply.setPerformative(ACLMessage.AGREE);
 								
 								try {
 									getContentManager().fillContent(reply, pleased);
-									System.out.println("6: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 									send(reply);
-									System.out.println("DEAD HAPPINESS FOR " + getAID().getLocalName() + " IS " + meanHappiness);
+									
+									System.out.println("FINAL HAPPINESS FOR " + getAID().getLocalName() + " IS " + meanHappiness);
 									doDelete();
 								}
 								catch(CodecException codecE) {
@@ -374,6 +369,7 @@ public class StudentAgent extends Agent{
 		}
 		return (1.0 / (SlotPreferences[slot.getDay()][slot.getTime()] + 1));
 	}
+	
 	
 	// Register with the DFD
 	protected void register() {

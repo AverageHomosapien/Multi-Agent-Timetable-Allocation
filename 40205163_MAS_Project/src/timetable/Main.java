@@ -1,5 +1,6 @@
 package timetable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import jade.core.*;
@@ -17,9 +18,15 @@ public class Main {
 	public static void main(String[] args) {
 		Profile myProfile = new ProfileImpl();
 		Runtime myRuntime = Runtime.instance();
-		int STUDENT_NUMBER = 2; // NUMBER OF STUDENT AGENTS TO BE CREATED
-		int TESTRUNCHOICE = 0; // OPTION OF PRORGAM TO RUN
+		
+		int STUDENT_NUMBER = 3; // NUMBER OF STUDENT AGENTS TO BE CREATED
+		int TESTRUNCHOICE = 3; // OPTION OF PRORGAM TO RUN
 
+		//
+		Object[] ttpasserArgs = new Object[2];
+		ttpasserArgs[0] = new ArrayList<AID>(); // TutorialGroups will be added to 
+		ttpasserArgs[1] = new ArrayList<AID>(); // TutorialGroups will be added to 
+		
 		Object[] passerArgs1 = new Object[2];
 		Object[] passerArgs2 = new Object[2];
 		Object[] passerArgs3 = new Object[2];
@@ -27,10 +34,19 @@ public class Main {
 		Object[] passerArgs5 = new Object[2];
 		Object[] passerArgs6 = new Object[2];
 		
+		int[][] slot_prefs_1 = new int[5][9];
+		int[][] slot_prefs_2 = new int[5][9]; 
+		int[][] slot_prefs_3 = new int[5][9]; 
+		int[][] slot_prefs_4 = new int[5][9];
+		int[][] slot_prefs_5 = new int[5][9]; 
+		int[][] slot_prefs_6 = new int[5][9]; 
+
+		String tutID = "SET010101";
+		String tutID2 = "SET010102";
+		String tutID3 = "SET010103";
 		
 		// Choosing the tutorialGroup 
 		if (TESTRUNCHOICE == 0) { // 2 classes with 1 set
-			String tutID = "SET01010";
 			int classSize = 5; 
 			
 			Timeslot slot1 = new Timeslot(0, 0); // Monday Morning
@@ -42,9 +58,6 @@ public class Main {
 			tg = new TutorialGroup(slot2, tutID, classSize);
 			TutorialGroup[] group2 = new TutorialGroup[1];
 			group2[0] = tg;
-			
-			int[][] slot_prefs_1 = new int[5][9];
-			int[][] slot_prefs_2 = new int[5][9]; 
 			
 			for (int i = 0; i < slot_prefs_1.length; i++) {
 				for (int j = 0; j < slot_prefs_1[0].length; j++) {
@@ -63,7 +76,6 @@ public class Main {
 			passerArgs2[1] = group2;
 		}
 		else if (TESTRUNCHOICE == 1) { // 3 classes 1 set
-			String tutID = "SET01010";
 			int classSize = 5; 
 			
 			Timeslot slot1 = new Timeslot(0, 0); // Monday Morning
@@ -80,10 +92,6 @@ public class Main {
 			tg = new TutorialGroup(slot3, tutID, classSize);
 			TutorialGroup[] group3 = new TutorialGroup[1];
 			group3[0] = tg;
-			
-			int[][] slot_prefs_1 = new int[5][9];
-			int[][] slot_prefs_2 = new int[5][9]; 
-			int[][] slot_prefs_3 = new int[5][9]; 
 			
 			for (int i = 0; i < slot_prefs_1.length; i++) {
 				for (int j = 0; j < slot_prefs_1[0].length; j++) {
@@ -115,15 +123,11 @@ public class Main {
 		else if (TESTRUNCHOICE == 2) { // Monday & Tuesday Morning 2 module swap
 			passerArgs1 = new Object[3];
 			passerArgs2 = new Object[3];
-			passerArgs3 = new Object[3];
-			
-			String tutID1 = "SET010101";
-			String tutID2 = "SET010102";
 			
 			int classSize = 5; // Class size of 5
 			
 			Timeslot slot1 = new Timeslot(0, 0); // First thing Monday morning
-			TutorialGroup tg1 = new TutorialGroup(slot1, tutID1, classSize);
+			TutorialGroup tg1 = new TutorialGroup(slot1, tutID, classSize);
 			
 			Timeslot slot2 = new Timeslot(1, 1); // Second thing Tuesday morning
 			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, classSize);
@@ -132,16 +136,13 @@ public class Main {
 			group1[1] = tg2;
 			
 			slot1 = new Timeslot(1, 0); // First thing Tuesday morning
-			tg1 = new TutorialGroup(slot1, tutID1, classSize);
-			slot2 = new Timeslot(0, 2); // Second thing Monday morning
+			tg1 = new TutorialGroup(slot1, tutID, classSize);
+			slot2 = new Timeslot(0, 1); // Second thing Monday morning
 			tg2 = new TutorialGroup(slot2, tutID2, classSize);
 			
 			TutorialGroup[] group2 = new TutorialGroup[2];
 			group2[0] = tg1;
 			group2[1] = tg2;
-			
-			int[][] slot_prefs_1 = new int[5][9];
-			int[][] slot_prefs_2 = new int[5][9]; 
 			
 			for (int i = 0; i < slot_prefs_1.length; i++) {
 				for (int j = 0; j < slot_prefs_1[0].length; j++) {
@@ -150,10 +151,10 @@ public class Main {
 				}
 			}
 			
-			slot_prefs_1[0][0] = 5; // Make them hate the slots they have
-			slot_prefs_1[1][0] = 0;
-			slot_prefs_2[0][0] = 0;
-			slot_prefs_2[1][0] = 5;
+			slot_prefs_1[0][0] = 1; // Make them hate the slots they have
+			slot_prefs_1[0][1] = 0;
+			slot_prefs_2[1][0] = 1;
+			slot_prefs_2[1][1] = 0;
 			
 			
 			passerArgs1[0] = slot_prefs_1;
@@ -162,21 +163,11 @@ public class Main {
 			passerArgs2[0] = slot_prefs_2;
 			passerArgs2[1] = group2;
 		}
-		else if (TESTRUNCHOICE == 3) { // 3 sets, 3 classes, 18 students
-			String tutID1 = "SET01010"; // 9ams
-			String tutID2 = "SET01011"; // 10ams
-			String tutID3 = "SET01012"; // 11ams
-					
+		else { // 3 sets, 3 classes, 18 students
+		//else if (TESTRUNCHOICE == 3) { 
 			int classSize = 6; 
 			
-			// All trying to move to 3 slot preferences
-			int[][] slot_prefs_1 = new int[5][9];
-			int[][] slot_prefs_2 = new int[5][9]; 
-			int[][] slot_prefs_3 = new int[5][9]; 
-			int[][] slot_prefs_4 = new int[5][9];
-			int[][] slot_prefs_5 = new int[5][9]; 
-			int[][] slot_prefs_6 = new int[5][9]; 
-			
+			// All trying to move to 3 slot preferences			
 			for (int i = 0; i < slot_prefs_1.length; i++) {
 				for (int j = 0; j < slot_prefs_1[0].length; j++) {
 					slot_prefs_1[i][j] = 4;
@@ -187,15 +178,8 @@ public class Main {
 					slot_prefs_6[i][j] = 4;
 				}
 			}
-			// Setting slot prefs to very desired
 			
-			slot_prefs_1[0][0] = 0;
-			slot_prefs_2[0][0] = 0;
-			slot_prefs_3[1][0] = 0;
-			slot_prefs_4[1][0] = 0;
-			slot_prefs_5[2][0] = 0;
-			slot_prefs_6[2][0] = 0;
-			for (int i = 1; i < 3; i++) {
+			for (int i = 0; i < 2; i++) { // Setting first 3 slot prefs as highly desired
 				slot_prefs_1[0][i] = 0;
 				slot_prefs_2[0][i] = 0;
 				slot_prefs_3[1][i] = 0;
@@ -203,115 +187,109 @@ public class Main {
 				slot_prefs_5[2][i] = 0;
 				slot_prefs_6[2][i] = 0;
 			}
-			
-			
+			slot_prefs_1[0][2] = 1;
+			slot_prefs_2[0][2] = 1;
+			slot_prefs_3[1][2] = 1;
+			slot_prefs_4[1][2] = 1;
+			slot_prefs_5[2][2] = 1;
+			slot_prefs_6[2][2] = 1;
+
 			
 			/// 6 groups of students \\\
 			
 			// Want all Monday Mornings
-			Timeslot slot1 = new Timeslot(2, 1);
-			TutorialGroup tg1 = new TutorialGroup(slot1, tutID2, classSize);
-			Timeslot slot2 = new Timeslot(1, 0);
-			TutorialGroup tg2 = new TutorialGroup(slot2, tutID1, classSize);
+			Timeslot slot1 = new Timeslot(1, 0);
+			TutorialGroup tg2 = new TutorialGroup(slot1, tutID, classSize);
+			Timeslot slot2 = new Timeslot(2, 1);
+			TutorialGroup tg1 = new TutorialGroup(slot2, tutID2, classSize);
 			Timeslot slot3 = new Timeslot(1, 2);
-			TutorialGroup tg3 = new TutorialGroup(slot2, tutID3, classSize);
+			TutorialGroup tg3 = new TutorialGroup(slot3, tutID3, classSize);
 			
 			TutorialGroup[] group1 = new TutorialGroup[3];
 			group1[0] = tg1;
 			group1[1] = tg2;
 			group1[2] = tg3;
-			slot_prefs_1[1][0] = 5;
-			slot_prefs_1[2][1] = 5;
-			slot_prefs_1[1][2] = 5;
+			slot_prefs_1[1][0] = 5; // 1 slot they can't stand
 			passerArgs1[0] = slot_prefs_1; // Setting passer arguments
 			passerArgs1[1] = group1;
-			
-			slot1 = new Timeslot(2, 2);
-			tg1 = new TutorialGroup(slot1, tutID3, classSize);
+
+			// Want all Monday Mornings
+			slot1 = new Timeslot(2, 0);
+			tg3 = new TutorialGroup(slot1, tutID, classSize);
 			slot2 = new Timeslot(1, 1);
 			tg2 = new TutorialGroup(slot2, tutID2, classSize);
-			slot3 = new Timeslot(2, 0);
-			tg3 = new TutorialGroup(slot2, tutID1, classSize);
+			slot3 = new Timeslot(2, 2);
+			tg1 = new TutorialGroup(slot3, tutID3, classSize);
 			
 			TutorialGroup[] group2 = new TutorialGroup[3];
 			group2[0] = tg1;
 			group2[1] = tg2;
 			group2[2] = tg3;
-			slot_prefs_2[2][2] = 5;
-			slot_prefs_2[1][1] = 5;
-			slot_prefs_2[2][0] = 5;
+			slot_prefs_2[2][2] = 5; // 1 slot they can't stand
 			passerArgs2[0] = slot_prefs_2; // Setting passer arguments
 			passerArgs2[1] = group2;
 			
 			
 			// Want Tuesday mornings
-			slot1 = new Timeslot(2, 2);
-			tg1 = new TutorialGroup(slot1, tutID3, classSize);
+			slot1 = new Timeslot(0, 0);
+			tg3 = new TutorialGroup(slot1, tutID, classSize);
 			slot2 = new Timeslot(0, 1);
 			tg2 = new TutorialGroup(slot2, tutID2, classSize);
-			slot3 = new Timeslot(0, 0);
-			tg3 = new TutorialGroup(slot2, tutID1, classSize);
+			slot3 = new Timeslot(2, 2);
+			tg1 = new TutorialGroup(slot3, tutID3, classSize);
 			
 			TutorialGroup[] group3 = new TutorialGroup[3];
 			group3[0] = tg1;
 			group3[1] = tg2;
 			group3[2] = tg3;
-			slot_prefs_3[2][2] = 5;
-			slot_prefs_3[0][1] = 5;
-			slot_prefs_3[0][0] = 5;
+			slot_prefs_3[0][0] = 5; // 1 slot they can't stand
 			passerArgs3[0] = slot_prefs_3; // Setting passer arguments
 			passerArgs3[1] = group3;
-			
-			slot1 = new Timeslot(0, 2);
-			tg1 = new TutorialGroup(slot1, tutID3, classSize);
+
+			slot1 = new Timeslot(2, 0);
+			tg3 = new TutorialGroup(slot1, tutID, classSize);
 			slot2 = new Timeslot(2, 1);
 			tg2 = new TutorialGroup(slot2, tutID2, classSize);
-			slot3 = new Timeslot(2, 0);
-			tg3 = new TutorialGroup(slot2, tutID1, classSize);
+			slot3 = new Timeslot(0, 2);
+			tg1 = new TutorialGroup(slot3, tutID3, classSize);
 			
 			TutorialGroup[] group4 = new TutorialGroup[3];
 			group4[0] = tg1;
 			group4[1] = tg2;
 			group4[2] = tg3;
-			slot_prefs_4[0][2] = 5;
-			slot_prefs_4[2][1] = 5;
-			slot_prefs_4[2][0] = 5;
+			slot_prefs_4[2][1] = 5; // 1 slot they can't stand
 			passerArgs4[0] = slot_prefs_4; // Setting passer arguments
 			passerArgs4[1] = group4;
 			
 			
 			// Wants Wednesday mornings
-			slot1 = new Timeslot(0, 2);
-			tg1 = new TutorialGroup(slot1, tutID3, classSize);
+			slot1 = new Timeslot(0, 0);
+			tg3 = new TutorialGroup(slot1, tutID, classSize);
 			slot2 = new Timeslot(0, 1);
 			tg2 = new TutorialGroup(slot2, tutID2, classSize);
-			slot3 = new Timeslot(0, 0);
-			tg3 = new TutorialGroup(slot2, tutID1, classSize);
+			slot3 = new Timeslot(0, 2);
+			tg1 = new TutorialGroup(slot3, tutID3, classSize);
 			
 			TutorialGroup[] group5 = new TutorialGroup[3];
 			group5[0] = tg1;
 			group5[1] = tg2;
 			group5[2] = tg3;
-			slot_prefs_5[0][2] = 5;
-			slot_prefs_5[0][1] = 5;
-			slot_prefs_5[0][0] = 5;
+			slot_prefs_5[0][1] = 5; // 1 slot they can't stand
 			passerArgs5[0] = slot_prefs_5; // Setting passer arguments
 			passerArgs5[1] = group5;
-			
-			slot1 = new Timeslot(1, 2); 
-			tg1 = new TutorialGroup(slot1, tutID3, classSize);
+
+			slot1 = new Timeslot(1, 0);
+			tg3 = new TutorialGroup(slot1, tutID, classSize);
 			slot2 = new Timeslot(1, 1);
 			tg2 = new TutorialGroup(slot2, tutID2, classSize);
-			slot3 = new Timeslot(1, 0);
-			tg3 = new TutorialGroup(slot2, tutID1, classSize);
+			slot3 = new Timeslot(1, 2); 
+			tg1 = new TutorialGroup(slot3, tutID3, classSize);
 			
 			TutorialGroup[] group6 = new TutorialGroup[3];
 			group6[0] = tg1;
 			group6[1] = tg2;
 			group6[2] = tg3;
-			slot_prefs_6[1][2] = 5;
-			slot_prefs_6[1][1] = 5;
-			slot_prefs_6[1][0] = 5;
+			slot_prefs_6[1][2] = 5; // 1 slot they can't stand
 			passerArgs6[0] = slot_prefs_6; // Setting passer arguments
 			passerArgs6[1] = group6;
 
@@ -321,10 +299,6 @@ public class Main {
 			ContainerController myContainer = myRuntime.createMainContainer(myProfile);	
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
-			
-			// Need to pass number of modules as 
-			AgentController timetablerAgent = myContainer.createNewAgent("timetabler", TimetablingAgent.class.getCanonicalName(), null);
-			timetablerAgent.start();
 			
 			AgentController agent0, agent1, agent2, agent3, agent4, agent5;
 			
@@ -358,7 +332,8 @@ public class Main {
 					agent1.start();
 				}
 			}
-			else if (TESTRUNCHOICE == 3) { // 6 groups of 5 students for 3 modules
+			else { // 6 groups of 5 students for 3 modules
+			//else if (TESTRUNCHOICE == 3) { // 6 groups of 5 students for 3 modules
 				for (int i = 0; i < STUDENT_NUMBER; i+=6) {
 					agent0 = myContainer.createNewAgent("student"+i, StudentAgent.class.getCanonicalName(), passerArgs1);
 					agent0.start();
@@ -379,7 +354,10 @@ public class Main {
 					agent5.start();
 				}
 			}
-			
+
+			// Need to pass number of modules as 
+			AgentController timetablerAgent = myContainer.createNewAgent("timetabler", TimetablingAgent.class.getCanonicalName(), ttpasserArgs);
+			timetablerAgent.start();
 			
 			
 			//ac[0] = myContainer.createNewAgent("student"+0, StudentAgent.class.getCanonicalName(), passerArgs1);

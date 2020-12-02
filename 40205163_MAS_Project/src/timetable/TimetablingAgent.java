@@ -51,7 +51,7 @@ public class TimetablingAgent extends Agent{
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
-		doWait(14000); // Wait for student agents to load -- Traditionally wait 30000
+		doWait(5000); // Wait for student agents to load -- Traditionally wait 30000
 		addBehaviour(new FindStudentsBehaviour(this)); // Finds the students
 		addBehaviour(new SwapStudentSlotBehaviour()); // Runs the Student Swapping Behaviour
 	}
@@ -128,7 +128,7 @@ public class TimetablingAgent extends Agent{
 				// This allows the Timetable Agent to only ask for slots if slots have been selected
 				// (Reduced message passing)
 				if (slotsRequested.getSlots().size() == 0) { // Go to next step if slots don't need confirmed
-					System.out.println("No slots. Proceed to confirming if agent is happy/slots to swap");
+					System.out.println("No slots. Confirming if agent slots to swap/is happy");
 					step=4;
 				}
 				else {
@@ -140,7 +140,8 @@ public class TimetablingAgent extends Agent{
 				System.out.println("Step 3 - Listening for swappedAgent");
 				MessageTemplate swapRequestFinalMt = MessageTemplate.MatchConversationId("swapRequestCheck"); // Listens for response from swappedAgent
 				msg = myAgent.receive(swapRequestFinalMt); 
-				if (msg != null) { // CHECK FOR TOTAL REPLIES - POSITIVE AND NEGATIVE FOR THIS
+				
+				if (msg != null) { // Check for swapped slots and un-swapped slots
 					try {
 						ContentElement ce = getContentManager().extractContent(msg);
 						if (ce instanceof Action) {
@@ -186,17 +187,20 @@ public class TimetablingAgent extends Agent{
 							if (action instanceof UnhappySlot) {
 								UnhappySlot slot = (UnhappySlot) action;
 								SwapInitial initSwap = slot.getSlotToSwap();
-								boolean present = false;
-								
-								// Checking if duplicate slot
-								for (SwapInitial swapCheck : messageBoard.getMessageBoard()) {
-									if (swapCheck.getTutorial().getTutorialID().equals(initSwap.getTutorial().getTutorialID()) &&
-											swapCheck.getAgentFrom().equals(initSwap.getAgentFrom())) {
-										present = true;
+								if (initSwap != null) {
+									boolean present = false;
+									
+									// Checking if duplicate slot
+									for (SwapInitial checkSlot : messageBoard.getMessageBoard()) {
+										if (checkSlot.getTutorial().getTutorialID().equals(initSwap.getTutorial().getTutorialID()) && checkSlot.getAgentFrom().equals(initSwap.getAgentFrom())) {
+											present = true;
+										}
 									}
-								}
-								if (!present) {
-									messageBoard.addToMessageBoard(initSwap);
+									if (!present) {
+										messageBoard.addToMessageBoard(initSwap);
+									}
+									
+									
 								}
 								done = true;
 								step = 0;
@@ -237,7 +241,6 @@ public class TimetablingAgent extends Agent{
 							}
 						}
 						
-						System.out.println("Agent " + getAID().getLocalName() + " is happy");
 						happyAgents.add(currentAgent); // Don't use lists and check at end - doesn't make sense anymore (unless can queue unhappy agents for switch at end of loop)
 						unhappyAgents.remove(currentAgent); // Remove agent
 					}
@@ -284,7 +287,6 @@ public class TimetablingAgent extends Agent{
 		@Override
 		public void action() {
 			List<SwapInitial> siList = new ArrayList<SwapInitial>();
-			
 			for (SwapInitial m : messageBoard.getMessageBoard()) {
 				siList.add(m);
 			}
@@ -302,7 +304,7 @@ public class TimetablingAgent extends Agent{
 						
 			try {
 				getContentManager().fillContent(msg, available);
-				System.out.println("1: TT Content is: " + msg.getContent());
+				//System.out.println("1: TT Content is: " + msg.getContent());
 				send(msg);
 			}
 			catch (CodecException ce) {
@@ -338,7 +340,7 @@ public class TimetablingAgent extends Agent{
 				
 				try {
 					getContentManager().fillContent(msg, action);
-					System.out.println("3: TT Content is: " + msg.getContent());
+					//System.out.println("3: TT Content is: " + msg.getContent());
 					send(msg);
 				}
 				catch(CodecException codecE) {
@@ -368,8 +370,18 @@ public class TimetablingAgent extends Agent{
 				HappyWith happy = new HappyWith();
 				happy.setSlots(new ArrayList<>());
 				
+				// Make sure slots are removed from the message board if they've been swapped to another agent
 				for (SwapFinal slot : slotsConfirmed.getSlots()) {
 					happy.addSlots(slot);
+					
+					for (int i = 0; i < messageBoard.getMessageBoard().size(); i++) {
+						if (slot.getInitalSwapRequest().getAgentFrom().equals(messageBoard.getMessageBoard().get(i).getAgentFrom()) && 
+							slot.getInitalSwapRequest().getTutorial().getTutorialID().equals(messageBoard.getMessageBoard().get(i).getTutorial().getTutorialID())) {
+							
+								messageBoard.getMessageBoard().remove(i);
+								break;
+						}
+					}
 				}
 				
 				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
@@ -383,7 +395,7 @@ public class TimetablingAgent extends Agent{
 				action.setActor(getAID());
 				
 				getContentManager().fillContent(msg, action);
-				System.out.println("5: TT Content is: " + msg.getContent());
+				//System.out.println("5: TT Content is: " + msg.getContent());
 				send(msg);
 			}
 			catch(CodecException codecE) {

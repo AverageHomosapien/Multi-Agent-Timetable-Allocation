@@ -9,7 +9,6 @@ public class MessageBoard implements Concept {
 	
 	private List<SwapInitial> messageBoard = new ArrayList<SwapInitial>();
 	
-	// try to set messageboard
 	public void setMessageBoard(List<SwapInitial> message) {
 		messageBoard = message;
 	}
