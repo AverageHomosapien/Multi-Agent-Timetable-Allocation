@@ -41,7 +41,7 @@ public class StudentAgent extends Agent{
 	private int[][] SlotPreferences;
 	private TutorialGroup[] CurrentTutorials;
 	private int messagesSent = 0;
-	private double meanHappinessTarget = 1.50;
+	private double meanHappinessTarget = 1.40;
 	private double minMeanHappinessTarget = 0.5;
 
 	
@@ -120,11 +120,15 @@ public class StudentAgent extends Agent{
 							}
 							wishedSlots.setSlots(swapsRequested);
 							
+							for (TutorialGroup tg : CurrentTutorials) {
+								System.out.println("I'm " + getAID().getLocalName() + " and I own " + tg.getTimeslot().getDay() + "," + tg.getTimeslot().getTime() + " for " + tg.getTutorialID() + " with num " + tg.getTutNum());
+							}
+							
 							ACLMessage reply = msg.createReply();
 							reply.setPerformative(ACLMessage.INFORM);
 							try {
-								System.out.println("2: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								getContentManager().fillContent(reply, wishedSlots);
+								System.out.println("2: " + getAID().getLocalName() + " Content is: " + reply.getContent());
 								send(reply);
 							}
 							catch (Exception e) {
