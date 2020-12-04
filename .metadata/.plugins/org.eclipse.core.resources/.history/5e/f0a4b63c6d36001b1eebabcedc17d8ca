@@ -84,13 +84,14 @@ public class TimetablingAgent extends Agent{
 		public void action() {
 			switch(step) {
 			case 0:
+				//System.out.println("Step 0 - notify of live");
 				currentAgent = unhappyAgents.get(studentIndex);
 				addBehaviour(new InitiateStudentBehaviour(currentAgent)); // Notifies the swapperAgent they're 'live'
 				step++;
 				break;
 			case 1:
-				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("messageBoard")
-							,MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
+				//System.out.println("Step 1 - sending messageboard");
+				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("messageBoard"),MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
 				ACLMessage msg = myAgent.receive(swapConfirmMt); 
 				if (msg != null) {
 					try {
@@ -131,6 +132,7 @@ public class TimetablingAgent extends Agent{
 				}
 				break;
 			case 2:
+				//System.out.println("Step 2 - Confirming selected slots with studentAgents");
 				slotsConfirmed.setSlots(new ArrayList<>()); // Setting slotsConfirmed slots
 				slotsDenied.setSlots(new ArrayList<>());
 				
@@ -145,6 +147,7 @@ public class TimetablingAgent extends Agent{
 				}
 				break;
 			case 3:
+				//System.out.println("Step 3 - Listening for swappedAgent");
 				MessageTemplate swapRequestFinalMt = MessageTemplate.MatchConversationId("swapRequestCheck"); // Listens for response from swappedAgent
 				msg = myAgent.receive(swapRequestFinalMt); 
 				
@@ -205,14 +208,15 @@ public class TimetablingAgent extends Agent{
 				}
 				break;
 			case 4:
+				//System.out.println("Step 4 - Confirming slots with requester agent & if happy");
 				addBehaviour(new InitiateStudentHappyBehaviour(slotsConfirmed, currentAgent)); // Initiates response verification with swapperAgent
 				step++;
 				break;
 			case 5:
+				//System.out.println("Step 5 - Getting happy or slots requested");
 				boolean happy = false;
 				boolean done = false;
-				MessageTemplate SlotRequestMt = MessageTemplate.and
-						(MessageTemplate.MatchConversationId("happyNow"),MessageTemplate.MatchSender(currentAgent));
+				MessageTemplate SlotRequestMt = MessageTemplate.and(MessageTemplate.MatchConversationId("happyNow"),MessageTemplate.MatchSender(currentAgent));
 				msg = myAgent.receive(SlotRequestMt); 
 				if (msg != null) {
 					try {
@@ -228,8 +232,7 @@ public class TimetablingAgent extends Agent{
 									
 									// Checking if duplicate slot
 									for (SwapInitial checkSlot : messageBoard.getMessageBoard()) {
-										if (checkSlot.getTutorial().getTutorialID().equals
-												(initSwap.getTutorial().getTutorialID()) && checkSlot.getAgentFrom().equals(initSwap.getAgentFrom())) {
+										if (checkSlot.getTutorial().getTutorialID().equals(initSwap.getTutorial().getTutorialID()) && checkSlot.getAgentFrom().equals(initSwap.getAgentFrom())) {
 											present = true;
 										}
 									}
@@ -271,7 +274,7 @@ public class TimetablingAgent extends Agent{
 					block();
 				}
 				
-				// If happy, add to happier list increment student index
+				// If happy, add to happier list increment student index -- DONT WANT TO CHANGE INDEX UNTIL FINISHED WORKING WITH ACTIVELIST??
 				if (done) {
 					if (happy) {
 						
@@ -388,7 +391,7 @@ public class TimetablingAgent extends Agent{
 				
 				Action action = new Action();
 				action.setAction(swap);
-				action.setActor(getAID()); // set itself as the actor - since it's requesting swap
+				action.setActor(getAID()); // set itself as the actor - since it's requesting final swap?
 				
 				try {
 					getContentManager().fillContent(msg, action);
@@ -445,6 +448,7 @@ public class TimetablingAgent extends Agent{
 				action.setActor(getAID());
 				
 				getContentManager().fillContent(msg, action);
+				//System.out.println("5: TT Content is: " + msg.getContent());
 				send(msg);
 			}
 			catch(CodecException codecE) {

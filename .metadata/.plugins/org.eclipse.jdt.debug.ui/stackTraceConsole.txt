@@ -1,0 +1,5 @@
+for (AID a : unhappyAgents) {
+					if (a.getLocalName().equals("student0")) {
+						addBehaviour(new InitiateStudent0(a));
+					}
+				}

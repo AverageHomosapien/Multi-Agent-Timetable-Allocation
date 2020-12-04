@@ -89,8 +89,7 @@ public class TimetablingAgent extends Agent{
 				step++;
 				break;
 			case 1:
-				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("messageBoard")
-							,MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
+				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("messageBoard"),MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
 				ACLMessage msg = myAgent.receive(swapConfirmMt); 
 				if (msg != null) {
 					try {
@@ -388,7 +387,7 @@ public class TimetablingAgent extends Agent{
 				
 				Action action = new Action();
 				action.setAction(swap);
-				action.setActor(getAID()); // set itself as the actor - since it's requesting swap
+				action.setActor(getAID()); // set itself as the actor - since it's requesting final swap?
 				
 				try {
 					getContentManager().fillContent(msg, action);

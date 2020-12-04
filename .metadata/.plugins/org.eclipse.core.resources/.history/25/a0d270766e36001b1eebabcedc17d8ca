@@ -1,3 +1,4 @@
+
 package timetable_ontology.elements;
 
 import jade.content.Concept;

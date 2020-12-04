@@ -388,7 +388,7 @@ public class TimetablingAgent extends Agent{
 				
 				Action action = new Action();
 				action.setAction(swap);
-				action.setActor(getAID()); // set itself as the actor - since it's requesting swap
+				action.setActor(getAID()); // set itself as the actor - since it's requesting final swap?
 				
 				try {
 					getContentManager().fillContent(msg, action);

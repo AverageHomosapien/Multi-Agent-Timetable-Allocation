@@ -1,11 +1,9 @@
 package timetable_ontology.elements;
 
 import java.util.ArrayList;
-
 import jade.content.AgentAction;
 import jade.content.onto.annotations.Slot;
 
-// HappyWith is breaking ontology
 public class HappyWith implements AgentAction{
 
 	private ArrayList<SwapFinal> slots;

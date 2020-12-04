@@ -89,8 +89,7 @@ public class TimetablingAgent extends Agent{
 				step++;
 				break;
 			case 1:
-				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("messageBoard")
-							,MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
+				MessageTemplate swapConfirmMt = MessageTemplate.and(MessageTemplate.MatchConversationId("messageBoard"),MessageTemplate.MatchSender(currentAgent)); // Listens for request from 'live' agent
 				ACLMessage msg = myAgent.receive(swapConfirmMt); 
 				if (msg != null) {
 					try {
@@ -211,8 +210,7 @@ public class TimetablingAgent extends Agent{
 			case 5:
 				boolean happy = false;
 				boolean done = false;
-				MessageTemplate SlotRequestMt = MessageTemplate.and
-						(MessageTemplate.MatchConversationId("happyNow"),MessageTemplate.MatchSender(currentAgent));
+				MessageTemplate SlotRequestMt = MessageTemplate.and(MessageTemplate.MatchConversationId("happyNow"),MessageTemplate.MatchSender(currentAgent));
 				msg = myAgent.receive(SlotRequestMt); 
 				if (msg != null) {
 					try {
@@ -228,8 +226,7 @@ public class TimetablingAgent extends Agent{
 									
 									// Checking if duplicate slot
 									for (SwapInitial checkSlot : messageBoard.getMessageBoard()) {
-										if (checkSlot.getTutorial().getTutorialID().equals
-												(initSwap.getTutorial().getTutorialID()) && checkSlot.getAgentFrom().equals(initSwap.getAgentFrom())) {
+										if (checkSlot.getTutorial().getTutorialID().equals(initSwap.getTutorial().getTutorialID()) && checkSlot.getAgentFrom().equals(initSwap.getAgentFrom())) {
 											present = true;
 										}
 									}
@@ -271,7 +268,7 @@ public class TimetablingAgent extends Agent{
 					block();
 				}
 				
-				// If happy, add to happier list increment student index
+				// If happy, add to happier list increment student index -- DONT WANT TO CHANGE INDEX UNTIL FINISHED WORKING WITH ACTIVELIST??
 				if (done) {
 					if (happy) {
 						
@@ -388,7 +385,7 @@ public class TimetablingAgent extends Agent{
 				
 				Action action = new Action();
 				action.setAction(swap);
-				action.setActor(getAID()); // set itself as the actor - since it's requesting swap
+				action.setActor(getAID()); // set itself as the actor - since it's requesting final swap?
 				
 				try {
 					getContentManager().fillContent(msg, action);

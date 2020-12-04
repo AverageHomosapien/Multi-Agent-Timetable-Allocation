@@ -21,7 +21,7 @@ public class Main {
 		Runtime myRuntime = Runtime.instance();
 		
 		// Control elements
-		int STUDENT_NUMBER = 80; // (Roughly) NUMBER OF STUDENT AGENTS TO BE CREATED - Depends on loop increment
+		int STUDENT_NUMBER = 23; // (Roughly) NUMBER OF STUDENT AGENTS TO BE CREATED - Depends on loop increment
 		int TESTRUNCHOICE = 3; // OPTION OF PRORGAM TO RUN 0/1/2/3+
 
 		Object[] ttpasserArgs = new Object[2];
