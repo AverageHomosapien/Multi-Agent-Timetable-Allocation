@@ -1,0 +1,422 @@
+package timetable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import jade.content.Concept;
+import jade.content.ContentElement;
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import timetable_ontology.TimetableOntology;
+import timetable_ontology.elements.HappyWith;
+import timetable_ontology.elements.MessageBoard;
+import timetable_ontology.elements.PleasedWith;
+import timetable_ontology.elements.SlotsAvailable;
+import timetable_ontology.elements.SlotsRequested;
+import timetable_ontology.elements.SwapFinal;
+import timetable_ontology.elements.SwapInitial;
+import timetable_ontology.elements.Timeslot;
+import timetable_ontology.elements.TutorialGroup;
+import timetable_ontology.elements.UnhappySlot;
+
+// Student Agent
+public class StudentAgent extends Agent{
+	private Codec codec = new SLCodec();
+	private Ontology ontology = TimetableOntology.getInstance();
+	MessageBoard slotsMessageBoard;
+	
+	private int[][] SlotPreferences;
+	private TutorialGroup[] CurrentTutorials;
+	private double meanHappinessTarget = 1.50; // Decreases slowly over time to allow the Agent to be 'Happy' later in the program
+	private double minMeanHappinessTarget = 0.5; // Minimum meanHappinessTarget
+	private HashMap<Integer, String> dayHM;
+	private HashMap<Integer, String> timeHM;
+	
+	@Override
+	protected void setup() {
+		register();
+		initHMs();
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
+		Object[] arguments = getArguments();
+		SlotPreferences = (int[][]) arguments[0];
+		CurrentTutorials = (TutorialGroup[]) arguments[1];
+		
+		addBehaviour(new AwaitTimetableBehaviour()); // Message board received by the Timetable Agent
+		addBehaviour(new AwaitSlotVerifyBehaviour()); // Agrees / Refuses Slot Request confirmations from the Timetable Agent
+		addBehaviour(new AwaitHappyBehaviour()); // Updates slots confirmed by the Timetable Agent and then confirms if happy or have a slot to give
+	}
+	
+	
+	// Waiting for the message board to be passed from the Timetable Agent
+	public class AwaitTimetableBehaviour extends CyclicBehaviour {
+
+		@Override
+		public void action() {
+			ACLMessage msg = myAgent.receive(MessageTemplate.MatchConversationId("messageBoard"));
+			if (msg != null) {
+				try {
+					//System.out.println(getAID().getLocalName() + " - Initiating timetable check"); //print out the message content in SL
+					ContentElement ce = getContentManager().extractContent(msg);
+					
+					if (ce instanceof SlotsAvailable) {
+						SlotsAvailable available = (SlotsAvailable) ce;
+						slotsMessageBoard = available.getBoard();
+						List<SwapInitial> messageBoard = slotsMessageBoard.getMessageBoard();
+						
+						// Checking for messages in the message board
+						if (messageBoard.size() > 0) {
+							SwapInitial[] interestedSlots = new SwapInitial[CurrentTutorials.length]; // Hold interested slots for each tutorial group
+							
+							// Fill the 'interested slots'
+							for (int i = 0; i < interestedSlots.length; i++) {
+								for (SwapInitial boardSwap : messageBoard) {
+									if (boardSwap.getTutorial().getTutorialID().equals(CurrentTutorials[i].getTutorialID())) { // If matching tutorial
+										if (interestedSlots[i] == null) {
+											if (SlotFitness(boardSwap.getTutorial().getTimeslot()) > 
+													SlotFitness(CurrentTutorials[i].getTimeslot())) { // If no current 'better slot'
+												interestedSlots[i] = boardSwap;
+											}
+										}else if (SlotFitness(boardSwap.getTutorial().getTimeslot()) > 
+													SlotFitness(interestedSlots[i].getTutorial().getTimeslot())){ // Better than 'best' slot
+											interestedSlots[i] = boardSwap;
+										}
+									}
+								}
+							}
+							
+							SlotsRequested wishedSlots = new SlotsRequested();
+							SwapFinal swapRequest;
+							ArrayList<SwapFinal> swapsRequested = new ArrayList<>();
+							
+							// Checking interested slots
+							for (SwapInitial swap : interestedSlots){
+								if (swap != null) {
+									swapRequest = new SwapFinal();
+									swapRequest.setInitalSwapRequest(swap);
+									swapRequest.setAgentTo(getAID());
+									
+									for (TutorialGroup currentTutorial : CurrentTutorials) {
+										if (currentTutorial.getTutorialID().equals(swap.getTutorial().getTutorialID())) {
+											swapRequest.setTutorialTo(currentTutorial); // Get the current tutorial
+											break;
+										}
+									}
+									swapsRequested.add(swapRequest);
+								}
+							}
+							wishedSlots.setSlots(swapsRequested);
+							
+							ACLMessage reply = msg.createReply();
+							reply.setPerformative(ACLMessage.INFORM);
+							try {
+								getContentManager().fillContent(reply, wishedSlots);
+								send(reply); // >0 wished slots
+							}
+							catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+						else { // If message board has no slots
+							SlotsRequested wishedSlots = new SlotsRequested();
+							wishedSlots.setSlots(new ArrayList<>());
+							ACLMessage reply = msg.createReply(); // 0 wished slots 
+							reply.setPerformative(ACLMessage.INFORM);
+							try {
+								getContentManager().fillContent(reply, wishedSlots);
+								send(reply);
+							}
+							catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
+		}
+	}
+	
+
+	// Responds to SwapFinal requests
+	public class AwaitSlotVerifyBehaviour extends CyclicBehaviour {
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchConversationId("swapRequestCheck");
+			ACLMessage msg = myAgent.receive(mt); 
+			if (msg != null) {
+				try {
+					//System.out.println(getAID().getLocalName() + " - Checking slot request");
+					ContentElement ce = getContentManager().extractContent(msg);
+					if (ce instanceof Action) {
+						Concept action = ((Action)ce).getAction();
+						if (action instanceof SwapFinal) {
+							SwapFinal swapRequest = (SwapFinal) action;
+							
+							ACLMessage reply = msg.createReply();
+							getContentManager().fillContent(reply, swapRequest);
+							
+							int count = 0;
+							// Checking if they want the tutorial
+							for (TutorialGroup tutorial : CurrentTutorials) {
+								if (tutorial.getTutorialID().equals(swapRequest.getTutorialTo().getTutorialID())) { // Checking same tutorial
+									if (SlotFitness(tutorial.getTimeslot()) <= 
+											SlotFitness(swapRequest.getTutorialTo().getTimeslot())) { // If indifferent or prefers slot
+										reply.setPerformative(ACLMessage.AGREE); // Agree because want to swap slot
+										CurrentTutorials[count] = swapRequest.getTutorialTo();
+										break;
+									}
+									else {
+										reply.setPerformative(ACLMessage.REFUSE); // Refuse because not interested
+										break;
+									}
+								}
+								else {
+									reply.setPerformative(ACLMessage.REFUSE); // Refuse as not the same tutorial ID
+								}
+								count++;
+							}
+							
+							Action actionReply = new Action();
+							actionReply.setAction(swapRequest);
+							actionReply.setActor(getAID());
+							
+							try {
+								getContentManager().fillContent(reply, actionReply);
+								send(reply);
+							}
+							catch(CodecException codecE) {
+								codecE.printStackTrace();
+							}
+							catch(OntologyException oe) {
+								oe.printStackTrace();
+							}
+						}
+					}
+				}
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
+		}
+	}
+	
+
+	// Sends worst slot to Timetable Agent OR check AGENT IS HAPPY HERE
+	public class AwaitHappyBehaviour extends CyclicBehaviour {
+		
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchConversationId("happyNow");
+			ACLMessage msg = myAgent.receive(mt); 
+			if (msg != null) {
+				//System.out.println(getAID().getLocalName() + " - Happy? or Post worst slot");
+				try {
+					ContentElement ce = getContentManager().extractContent(msg);
+					if (ce instanceof Action) {
+						Concept action = ((Action)ce).getAction();
+						
+						if (action instanceof HappyWith) {
+							HappyWith happy = ((HappyWith)action);
+
+							for (SwapFinal slot : happy.getSlots()) {
+								for (int i = 0; i < CurrentTutorials.length; i++) {
+									if (slot.getTutorialTo().getTutorialID().equals(CurrentTutorials[i].getTutorialID())) {
+										CurrentTutorials[i] = slot.getInitalSwapRequest().getTutorial();
+										break;
+									}
+								}
+							}
+							
+							double meanHappiness = 0;
+							
+							// Get Mean unhappiness across slots
+							for (int i = 0; i < CurrentTutorials.length; i++) {
+								meanHappiness += SlotFitness(CurrentTutorials[i].getTimeslot());
+							}
+							
+							meanHappiness /= CurrentTutorials.length;
+							
+							// Reducing happiness required each run
+							if (meanHappinessTarget > minMeanHappinessTarget) {
+								meanHappinessTarget -= 0.02;
+							}
+							
+							// If high enough overall happiness -- 0 or 1 slots accepted
+							if (meanHappiness <= meanHappinessTarget) {
+								
+								// Checking slots that haven't been advertised yet
+								List<Integer> slotsNotAdvertised = new ArrayList<>();
+								
+								// Getting current slots not on messageboard
+								for (int i = 0; i < CurrentTutorials.length; i++) {
+									boolean advertisedAlready = false;
+									for (SwapInitial item : slotsMessageBoard.getMessageBoard()) {
+										if (item.getAgentFrom().equals(getAID()) && 
+												item.getTutorial().getTutorialID().equals(CurrentTutorials[i].getTutorialID())) {
+											advertisedAlready = true;
+											continue;
+										}
+									}
+									if (!advertisedAlready) {
+										if (SlotFitness(CurrentTutorials[i].getTimeslot()) < 1.0) { // Don't post slot if happy already
+											slotsNotAdvertised.add(i);
+										}
+									}
+								}
+								
+								int worstTutorial = -1; // Worst tutorial is slotsNotAdvertised positional reference
+								
+								// Comparing slots - if all slots posted (or no slots student wishes to post) then nothing
+								if (slotsNotAdvertised.size() > 0) { 
+									worstTutorial = 0;
+									// Select worst slot not currently on timetable
+									for (int i = 1; i < slotsNotAdvertised.size(); i++) {
+										if (SlotFitness(CurrentTutorials[slotsNotAdvertised.get(i)].getTimeslot()) < 
+												SlotFitness(CurrentTutorials[slotsNotAdvertised.get(worstTutorial)].getTimeslot())) {
+											worstTutorial = i;
+										}
+									} 
+								}
+								
+								UnhappySlot slot = new UnhappySlot();
+								// Add slot found (if found) to 'Unhappy Slot' posting
+								if (worstTutorial != -1) {
+									SwapInitial si = new SwapInitial();
+									si.setAgentFrom(myAgent.getAID());
+									si.setTutorial(CurrentTutorials[slotsNotAdvertised.get(worstTutorial)]);
+									slot.setSlotToSwap(si);
+								}
+								
+								Action newAction = new Action();
+								newAction.setActor(getAID());
+								newAction.setAction(slot);
+								
+								ACLMessage reply = msg.createReply();
+								reply.setPerformative(ACLMessage.REFUSE);
+								
+								try {
+									getContentManager().fillContent(reply, newAction);
+									send(reply);
+								}
+								catch(CodecException codecE) {
+									codecE.printStackTrace();
+								}
+								catch(OntologyException oe) {
+									oe.printStackTrace();
+								}
+							}else {
+								
+								for (TutorialGroup tg : CurrentTutorials) {
+									System.out.println(getAID().getLocalName() + " has ended with " + tg.getTutorialID() + ", tutorial number " + tg.getTutNum() + " on " + tg.getTimeslot().getDay() + "," + tg.getTimeslot().getTime());
+								}
+								
+								ACLMessage reply = msg.createReply();
+								PleasedWith pleased = new PleasedWith();
+								pleased.setStudent(getAID());
+								reply.setPerformative(ACLMessage.AGREE);
+								
+								try {
+									getContentManager().fillContent(reply, pleased);
+									send(reply);
+									
+									System.out.println("FINAL HAPPINESS FOR " + getAID().getLocalName() + " IS " + meanHappiness);
+									doDelete();
+								}
+								catch(CodecException codecE) {
+									codecE.printStackTrace();
+								}
+								catch(OntologyException oe) {
+									oe.printStackTrace();
+								}
+							}
+						}
+					}
+				}
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
+		}
+	}
+	
+	
+	// Calculates timeslot fitness
+	private double SlotFitness(Timeslot slot) {
+		if (SlotPreferences[slot.getDay()][slot.getTime()]==5) { // Heavily punished if they can't attend
+			return -5.0; 
+		}
+		return (1.0 / (SlotPreferences[slot.getDay()][slot.getTime()] + 1));
+	}
+	
+	
+	// Register with the DFD
+	protected void register() {
+		DFAgentDescription dfd = new DFAgentDescription ();
+		dfd.setName(getAID());
+		
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("student-agent");
+		sd.setName( getLocalName() + "-student-agent");
+		dfd.addServices(sd);
+		
+		try{
+			DFService.register(this , dfd);
+		}
+		catch(FIPAException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void initHMs() {
+		dayHM.put(0, "Monday");
+		dayHM.put(1, "Tuesday");
+		dayHM.put(2, "Wednesday");
+		dayHM.put(3, "Thursday");
+		dayHM.put(4, "Friday");
+		dayHM.put(5, "Saturday");
+		dayHM.put(6, "Sunday");
+		
+		timeHM.put(0, "9am");
+		timeHM.put(1, "10am");
+		timeHM.put(2, "11am");
+		timeHM.put(3, "12pm");
+		timeHM.put(4, "1pm");
+		timeHM.put(5, "2pm");
+		timeHM.put(6, "3pm");
+		timeHM.put(7, "4pm");
+		timeHM.put(8, "5pm");
+	}
+}

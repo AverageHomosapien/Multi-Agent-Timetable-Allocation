@@ -1,6 +1,7 @@
 package timetable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import jade.content.Concept;
@@ -42,11 +43,13 @@ public class StudentAgent extends Agent{
 	private TutorialGroup[] CurrentTutorials;
 	private double meanHappinessTarget = 1.50; // Decreases slowly over time to allow the Agent to be 'Happy' later in the program
 	private double minMeanHappinessTarget = 0.5; // Minimum meanHappinessTarget
-
+	private HashMap<Integer, String> dayHM = new HashMap<>();
+	private HashMap<Integer, String> timeHM = new HashMap<>();
 	
 	@Override
 	protected void setup() {
 		register();
+		initHMs();
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
@@ -68,7 +71,7 @@ public class StudentAgent extends Agent{
 			ACLMessage msg = myAgent.receive(MessageTemplate.MatchConversationId("messageBoard"));
 			if (msg != null) {
 				try {
-					System.out.println(getAID().getLocalName() + " - Initiating timetable check"); //print out the message content in SL
+					//System.out.println(getAID().getLocalName() + " - Initiating timetable check"); //print out the message content in SL
 					ContentElement ce = getContentManager().extractContent(msg);
 					
 					if (ce instanceof SlotsAvailable) {
@@ -163,7 +166,7 @@ public class StudentAgent extends Agent{
 			ACLMessage msg = myAgent.receive(mt); 
 			if (msg != null) {
 				try {
-					System.out.println(getAID().getLocalName() + " - Checking slot request");
+					//System.out.println(getAID().getLocalName() + " - Checking slot request");
 					ContentElement ce = getContentManager().extractContent(msg);
 					if (ce instanceof Action) {
 						Concept action = ((Action)ce).getAction();
@@ -233,7 +236,7 @@ public class StudentAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.MatchConversationId("happyNow");
 			ACLMessage msg = myAgent.receive(mt); 
 			if (msg != null) {
-				System.out.println(getAID().getLocalName() + " - Happy? or Post worst slot");
+				//System.out.println(getAID().getLocalName() + " - Happy? or Post worst slot");
 				try {
 					ContentElement ce = getContentManager().extractContent(msg);
 					if (ce instanceof Action) {
@@ -241,7 +244,7 @@ public class StudentAgent extends Agent{
 						
 						if (action instanceof HappyWith) {
 							HappyWith happy = ((HappyWith)action);
-							
+
 							for (SwapFinal slot : happy.getSlots()) {
 								for (int i = 0; i < CurrentTutorials.length; i++) {
 									if (slot.getTutorialTo().getTutorialID().equals(CurrentTutorials[i].getTutorialID())) {
@@ -329,6 +332,11 @@ public class StudentAgent extends Agent{
 									oe.printStackTrace();
 								}
 							}else {
+								
+								for (TutorialGroup tg : CurrentTutorials) {
+									System.out.println(getAID().getLocalName() + " has ended with " + tg.getTutorialID() + " on " + dayHM.get(tg.getTimeslot().getDay()) + " at " + timeHM.get(tg.getTimeslot().getTime()));
+								}
+								
 								ACLMessage reply = msg.createReply();
 								PleasedWith pleased = new PleasedWith();
 								pleased.setStudent(getAID());
@@ -339,6 +347,7 @@ public class StudentAgent extends Agent{
 									send(reply);
 									
 									System.out.println("FINAL HAPPINESS FOR " + getAID().getLocalName() + " IS " + meanHappiness);
+									System.out.println("");
 									doDelete();
 								}
 								catch(CodecException codecE) {
@@ -390,5 +399,25 @@ public class StudentAgent extends Agent{
 		catch(FIPAException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void initHMs() {
+		dayHM.put(0, "Monday");
+		dayHM.put(1, "Tuesday");
+		dayHM.put(2, "Wednesday");
+		dayHM.put(3, "Thursday");
+		dayHM.put(4, "Friday");
+		dayHM.put(5, "Saturday");
+		dayHM.put(6, "Sunday");
+		
+		timeHM.put(0, "9am");
+		timeHM.put(1, "10am");
+		timeHM.put(2, "11am");
+		timeHM.put(3, "12pm");
+		timeHM.put(4, "1pm");
+		timeHM.put(5, "2pm");
+		timeHM.put(6, "3pm");
+		timeHM.put(7, "4pm");
+		timeHM.put(8, "5pm");
 	}
 }

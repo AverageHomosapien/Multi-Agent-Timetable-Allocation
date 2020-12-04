@@ -21,8 +21,8 @@ public class Main {
 		Runtime myRuntime = Runtime.instance();
 		
 		// Control elements
-		int STUDENT_NUMBER = 1; // (Roughly) NUMBER OF STUDENT AGENTS TO BE CREATED - Depends on loop style
-		int TESTRUNCHOICE = 0; // OPTION OF PRORGAM TO RUN
+		int STUDENT_NUMBER = 23; // (Roughly) NUMBER OF STUDENT AGENTS TO BE CREATED - Depends on loop increment
+		int TESTRUNCHOICE = 3; // OPTION OF PRORGAM TO RUN 0/1/2/3+
 
 		Object[] ttpasserArgs = new Object[2];
 		List<String> studentsToPass = new ArrayList<>(); // Will be added to ttpasserArgs[0]
@@ -126,23 +126,20 @@ public class Main {
 			passerArgs3[1] = group3;
 		}
 		else if (TESTRUNCHOICE == 2) { // Monday & Tuesday Morning 2 module swap
-			passerArgs1 = new Object[3];
-			passerArgs2 = new Object[3];
-			
 			Timeslot slot1 = new Timeslot(0, 0); // First thing Monday morning
 			TutorialGroup tg1 = new TutorialGroup(slot1, tutID, 0);
 			
-			Timeslot slot2 = new Timeslot(1, 1); // Second thing Tuesday morning
-			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, 1);
+			Timeslot slot2 = new Timeslot(0, 1); // Second thing Monday morning
+			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, 0);
 			TutorialGroup[] group1 = new TutorialGroup[2];
 			group1[0] = tg1;
 			group1[1] = tg2;
 			tutorialsToPass.add(group1);
 			
-			slot1 = new Timeslot(1, 0); // First thing Tuesday morning
+			slot1 = new Timeslot(1, 1); // First thing Tuesday morning
 			tg1 = new TutorialGroup(slot1, tutID, 1);
-			slot2 = new Timeslot(0, 1); // Second thing Monday morning
-			tg2 = new TutorialGroup(slot2, tutID2, 0);
+			slot2 = new Timeslot(1, 0); // Second thing Tuesday morning
+			tg2 = new TutorialGroup(slot2, tutID2, 1);
 			
 			TutorialGroup[] group2 = new TutorialGroup[2];
 			group2[0] = tg1;
@@ -156,10 +153,10 @@ public class Main {
 				}
 			}
 			
-			slot_prefs_1[0][0] = 1; // Make them hate the slots they have
-			slot_prefs_1[0][1] = 0;
-			slot_prefs_2[1][0] = 1;
-			slot_prefs_2[1][1] = 0;
+			slot_prefs_1[1][0] = 3; // Make them want the slots they don't have
+			slot_prefs_1[1][1] = 0;
+			slot_prefs_2[0][0] = 3;
+			slot_prefs_2[0][1] = 0;
 			
 			
 			passerArgs1[0] = slot_prefs_1;
@@ -182,20 +179,36 @@ public class Main {
 				}
 			}
 			
-			for (int i = 0; i < 2; i++) { // Setting first 3 slot prefs as highly desired
-				slot_prefs_1[0][i] = 0;
-				slot_prefs_2[0][i] = 0;
-				slot_prefs_3[1][i] = 0;
-				slot_prefs_4[1][i] = 0;
-				slot_prefs_5[2][i] = 0;
-				slot_prefs_6[2][i] = 0;
+			for (int i = 0; i < slot_prefs_1.length; i++) {
+				slot_prefs_1[i][8] = 5;
+				slot_prefs_2[i][8] = 5;
+				slot_prefs_3[i][8] = 5;
+				slot_prefs_4[i][8] = 5;
+				slot_prefs_5[i][8] = 5;
+				slot_prefs_6[i][8] = 5;
 			}
-			slot_prefs_1[0][2] = 1;
-			slot_prefs_2[0][2] = 1;
-			slot_prefs_3[1][2] = 1;
-			slot_prefs_4[1][2] = 1;
-			slot_prefs_5[2][2] = 1;
-			slot_prefs_6[2][2] = 1;
+			
+			slot_prefs_1[0][0] = 2;
+			slot_prefs_2[0][0] = 2;
+			slot_prefs_3[1][0] = 2;
+			slot_prefs_4[1][0] = 2;
+			slot_prefs_5[2][0] = 2;
+			slot_prefs_6[2][0] = 2;
+			
+			slot_prefs_1[0][1] = 1;
+			slot_prefs_2[0][1] = 1;
+			slot_prefs_3[1][1] = 1;
+			slot_prefs_4[1][1] = 1;
+			slot_prefs_5[2][1] = 1;
+			slot_prefs_6[2][1] = 1;
+			
+			
+			slot_prefs_1[0][2] = 0;
+			slot_prefs_2[0][2] = 0;
+			slot_prefs_3[1][2] = 0;
+			slot_prefs_4[1][2] = 0;
+			slot_prefs_5[2][2] = 0;
+			slot_prefs_6[2][2] = 0;
 
 			
 			/// 6 groups of students \\\
