@@ -15,10 +15,9 @@ public class TutorialGroup implements Concept {
 	}
 	
 	// Used by main
-	public TutorialGroup(Timeslot slot, String tutorialID, int classSize, int tutNum) {
+	public TutorialGroup(Timeslot slot, String tutorialID, int tutNum) {
 		this.slot = slot;
 		this.tutorialID = tutorialID;
-		this.classSize = classSize;
 		this.setTutNum(tutNum);
 	}
 
@@ -42,13 +41,6 @@ public class TutorialGroup implements Concept {
 	}	
 	public void setTutorialID(String tutorialID) {
 		this.tutorialID = tutorialID;
-	}
-	
-	public int getClassSize() {
-		return classSize;
-	}
-	public void setClassSize(int classSize) {
-		this.classSize = classSize;
 	}
 
 	@Slot (mandatory = true)

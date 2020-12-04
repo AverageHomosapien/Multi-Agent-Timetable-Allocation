@@ -21,8 +21,8 @@ public class Main {
 		Runtime myRuntime = Runtime.instance();
 		
 		// Control elements
-		int STUDENT_NUMBER = 6; // (Roughly) NUMBER OF STUDENT AGENTS TO BE CREATED - Depends on loop style
-		int TESTRUNCHOICE = 1; // OPTION OF PRORGAM TO RUN
+		int STUDENT_NUMBER = 1; // (Roughly) NUMBER OF STUDENT AGENTS TO BE CREATED - Depends on loop style
+		int TESTRUNCHOICE = 0; // OPTION OF PRORGAM TO RUN
 
 		Object[] ttpasserArgs = new Object[2];
 		List<String> studentsToPass = new ArrayList<>(); // Will be added to ttpasserArgs[0]
@@ -49,16 +49,15 @@ public class Main {
 		
 		// Choosing the tutorialGroup 
 		if (TESTRUNCHOICE == 0) { // 2 classes with 1 set
-			int classSize = 5; 
-			
+
 			Timeslot slot1 = new Timeslot(0, 0); // Monday Morning
-			TutorialGroup tg = new TutorialGroup(slot1, tutID, classSize, 0);
+			TutorialGroup tg = new TutorialGroup(slot1, tutID, 0);
 			TutorialGroup[] group1 = new TutorialGroup[1];
 			group1[0] = tg;
 			tutorialsToPass.add(group1);
 			
 			Timeslot slot2 = new Timeslot(4, 8); // Friday Afternoon
-			tg = new TutorialGroup(slot2, tutID, classSize, 1);
+			tg = new TutorialGroup(slot2, tutID, 1);
 			TutorialGroup[] group2 = new TutorialGroup[1];
 			group2[0] = tg;
 			tutorialsToPass.add(group2);
@@ -70,7 +69,7 @@ public class Main {
 				}
 			}
 			
-			slot_prefs_1[0][0] = 5; // Make them hate the slots they have
+			slot_prefs_1[0][0] = 5; // Make them unable to attend slots they have
 			slot_prefs_2[4][8] = 5;
 			
 			passerArgs1[0] = slot_prefs_1;
@@ -80,22 +79,21 @@ public class Main {
 			passerArgs2[1] = group2;
 		}
 		else if (TESTRUNCHOICE == 1) { // 3 classes 1 set
-			int classSize = 5; 
 			
 			Timeslot slot1 = new Timeslot(0, 0); // Monday Morning
-			TutorialGroup tg = new TutorialGroup(slot1, tutID, classSize, 0);
+			TutorialGroup tg = new TutorialGroup(slot1, tutID, 0);
 			TutorialGroup[] group1 = new TutorialGroup[1];
 			group1[0] = tg;
 			tutorialsToPass.add(group1);
 			
 			Timeslot slot2 = new Timeslot(1, 0); // Tuesday Morning
-			tg = new TutorialGroup(slot2, tutID, classSize, 1);
+			tg = new TutorialGroup(slot2, tutID, 1);
 			TutorialGroup[] group2 = new TutorialGroup[1];
 			group2[0] = tg;
 			tutorialsToPass.add(group2);
 			
 			Timeslot slot3 = new Timeslot(2, 0); // Wednesday Morning
-			tg = new TutorialGroup(slot3, tutID, classSize, 2);
+			tg = new TutorialGroup(slot3, tutID, 2);
 			TutorialGroup[] group3 = new TutorialGroup[1];
 			group3[0] = tg;
 			tutorialsToPass.add(group3);
@@ -131,22 +129,20 @@ public class Main {
 			passerArgs1 = new Object[3];
 			passerArgs2 = new Object[3];
 			
-			int classSize = 5; // Class size of 5
-			
 			Timeslot slot1 = new Timeslot(0, 0); // First thing Monday morning
-			TutorialGroup tg1 = new TutorialGroup(slot1, tutID, classSize, 0);
+			TutorialGroup tg1 = new TutorialGroup(slot1, tutID, 0);
 			
 			Timeslot slot2 = new Timeslot(1, 1); // Second thing Tuesday morning
-			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, classSize, 1);
+			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, 1);
 			TutorialGroup[] group1 = new TutorialGroup[2];
 			group1[0] = tg1;
 			group1[1] = tg2;
 			tutorialsToPass.add(group1);
 			
 			slot1 = new Timeslot(1, 0); // First thing Tuesday morning
-			tg1 = new TutorialGroup(slot1, tutID, classSize, 1);
+			tg1 = new TutorialGroup(slot1, tutID, 1);
 			slot2 = new Timeslot(0, 1); // Second thing Monday morning
-			tg2 = new TutorialGroup(slot2, tutID2, classSize, 0);
+			tg2 = new TutorialGroup(slot2, tutID2, 0);
 			
 			TutorialGroup[] group2 = new TutorialGroup[2];
 			group2[0] = tg1;
@@ -173,8 +169,6 @@ public class Main {
 			passerArgs2[1] = group2;
 		}
 		else { // 3 sets, 3 classes, 18 students
-		//else if (TESTRUNCHOICE == 3) { 
-			int classSize = 6; 
 			
 			// All trying to move to 3 slot preferences			
 			for (int i = 0; i < slot_prefs_1.length; i++) {
@@ -208,11 +202,11 @@ public class Main {
 			
 			// Want all Monday Mornings
 			Timeslot slot1 = new Timeslot(1, 0);
-			TutorialGroup tg1 = new TutorialGroup(slot1, tutID, classSize, 1);
+			TutorialGroup tg1 = new TutorialGroup(slot1, tutID, 1);
 			Timeslot slot2 = new Timeslot(2, 1);
-			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, classSize, 2);
+			TutorialGroup tg2 = new TutorialGroup(slot2, tutID2, 2);
 			Timeslot slot3 = new Timeslot(1, 2);
-			TutorialGroup tg3 = new TutorialGroup(slot3, tutID3, classSize, 1);
+			TutorialGroup tg3 = new TutorialGroup(slot3, tutID3, 1);
 			
 			TutorialGroup[] group1 = new TutorialGroup[3];
 			group1[0] = tg1;
@@ -225,11 +219,11 @@ public class Main {
 
 			// Want all Monday Mornings
 			slot1 = new Timeslot(2, 0);
-			tg1 = new TutorialGroup(slot1, tutID, classSize, 2);
+			tg1 = new TutorialGroup(slot1, tutID, 2);
 			slot2 = new Timeslot(1, 1);
-			tg2 = new TutorialGroup(slot2, tutID2, classSize, 1);
+			tg2 = new TutorialGroup(slot2, tutID2, 1);
 			slot3 = new Timeslot(2, 2);
-			tg3 = new TutorialGroup(slot3, tutID3, classSize, 2);
+			tg3 = new TutorialGroup(slot3, tutID3, 2);
 			
 			TutorialGroup[] group2 = new TutorialGroup[3];
 			group2[0] = tg1;
@@ -243,11 +237,11 @@ public class Main {
 			
 			// Want Tuesday mornings
 			slot1 = new Timeslot(0, 0);
-			tg1 = new TutorialGroup(slot1, tutID, classSize, 0);
+			tg1 = new TutorialGroup(slot1, tutID, 0);
 			slot2 = new Timeslot(0, 1);
-			tg2 = new TutorialGroup(slot2, tutID2, classSize, 0);
+			tg2 = new TutorialGroup(slot2, tutID2, 0);
 			slot3 = new Timeslot(2, 2);
-			tg3 = new TutorialGroup(slot3, tutID3, classSize, 2);
+			tg3 = new TutorialGroup(slot3, tutID3, 2);
 			
 			TutorialGroup[] group3 = new TutorialGroup[3];
 			group3[0] = tg1;
@@ -259,11 +253,11 @@ public class Main {
 			tutorialsToPass.add(group3);
 
 			slot1 = new Timeslot(2, 0);
-			tg1 = new TutorialGroup(slot1, tutID, classSize, 2);
+			tg1 = new TutorialGroup(slot1, tutID, 2);
 			slot2 = new Timeslot(2, 1);
-			tg2 = new TutorialGroup(slot2, tutID2, classSize, 2);
+			tg2 = new TutorialGroup(slot2, tutID2, 2);
 			slot3 = new Timeslot(0, 2);
-			tg3 = new TutorialGroup(slot3, tutID3, classSize, 0);
+			tg3 = new TutorialGroup(slot3, tutID3, 0);
 			
 			TutorialGroup[] group4 = new TutorialGroup[3];
 			group4[0] = tg1;
@@ -277,11 +271,11 @@ public class Main {
 			
 			// Wants Wednesday mornings
 			slot1 = new Timeslot(0, 0);
-			tg1 = new TutorialGroup(slot1, tutID, classSize, 0);
+			tg1 = new TutorialGroup(slot1, tutID, 0);
 			slot2 = new Timeslot(0, 1);
-			tg2 = new TutorialGroup(slot2, tutID2, classSize, 0);
+			tg2 = new TutorialGroup(slot2, tutID2, 0);
 			slot3 = new Timeslot(0, 2);
-			tg3 = new TutorialGroup(slot3, tutID3, classSize, 0);
+			tg3 = new TutorialGroup(slot3, tutID3, 0);
 			
 			TutorialGroup[] group5 = new TutorialGroup[3];
 			group5[0] = tg1;
@@ -293,11 +287,11 @@ public class Main {
 			tutorialsToPass.add(group5);
 
 			slot1 = new Timeslot(1, 0);
-			tg1 = new TutorialGroup(slot1, tutID, classSize, 1);
+			tg1 = new TutorialGroup(slot1, tutID, 1);
 			slot2 = new Timeslot(1, 1);
-			tg2 = new TutorialGroup(slot2, tutID2, classSize, 1);
+			tg2 = new TutorialGroup(slot2, tutID2, 1);
 			slot3 = new Timeslot(1, 2); 
-			tg3 = new TutorialGroup(slot3, tutID3, classSize, 1);
+			tg3 = new TutorialGroup(slot3, tutID3, 1);
 			
 			TutorialGroup[] group6 = new TutorialGroup[3];
 			group6[0] = tg1;

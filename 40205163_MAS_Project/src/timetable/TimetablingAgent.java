@@ -66,7 +66,7 @@ public class TimetablingAgent extends Agent{
 		List<String> studentString = (List<String>) arguments[0];
 		List<TutorialGroup[]> tutorialList = (List<TutorialGroup[]>) arguments[1];
 		
-		doWait(5000); // Wait for student agents to load -- Traditionally wait 30000
+		doWait(5000); // Wait for student agents to load
 		addBehaviour(new FindStudentsBehaviour(this)); // Finds the students
 		addBehaviour(new SetupTTBehaviour(studentString, tutorialList));
 		addBehaviour(new SwapStudentSlotBehaviour()); // Runs the Student Swapping Behaviour
@@ -155,12 +155,6 @@ public class TimetablingAgent extends Agent{
 				}
 			}
 			
-			for (int i = 0; i < tutorials.size(); i++) {
-				for (int j = 0; j < tutorials.get(0).length; j++) {
-					System.out.println("tutorial " + tutorials.get(i)[j].getTutorialID() + " with num " + tutorials.get(i)[j].getTutNum());
-				}
-			}
-			
 			int loopVal = 0;
 			// Adding students to the correct tutorial group
 			for (int i = 0; i < tempAIDs.size(); i++){
@@ -173,14 +167,6 @@ public class TimetablingAgent extends Agent{
 					loopVal = 0;
 				}else {
 					loopVal++;
-				}
-			}
-			
-			for (int i = 0; i < StudentSlots.length; i++) {
-				for (int j = 0; j < StudentSlots[0].length; j++) {
-					for (AID id : StudentSlots[i][j]) {
-						System.out.println("StudentSlots["+i+"]["+j+"] is " + id.getLocalName());
-					}
 				}
 			}
 		}
@@ -219,18 +205,20 @@ public class TimetablingAgent extends Agent{
 							Iterator<SwapFinal> it = slotsRequested.getSlots().iterator();
 							while (it.hasNext()) {
 								SwapFinal itSwap = it.next();
-								System.out.println(itSwap.getAgentTo().getLocalName() + " requesting " + itSwap.getInitalSwapRequest().getTutorial().getTimeslot().getDay() + "," + itSwap.getInitalSwapRequest().getTutorial().getTimeslot().getTime() + " from " + itSwap.getInitalSwapRequest().getAgentFrom().getLocalName());
-								System.out.println("The liar claims it has " + itSwap.getTutorialTo().getTimeslot().getDay() + "," + itSwap.getTutorialTo().getTimeslot().getTime() + " for " + itSwap.getTutorialTo().getTutorialID() + " num " + itSwap.getTutorialTo().getTutNum());
 								boolean present = false;
 								// Looping through requester agent to check if agent has those tutorial slots
-								for (AID agent : StudentSlots[TutorialMap.get(itSwap.getTutorialTo().getTutorialID())][itSwap.getTutorialTo().getTutNum()]) {
-									System.out.println("Agent found is " + agent.getLocalName());
+								for (AID agent : StudentSlots
+										[TutorialMap.get(itSwap.getTutorialTo().getTutorialID())][itSwap.getTutorialTo().getTutNum()]) {
 									if (itSwap.getAgentTo().equals(agent)) {
 										present = true;
 										break;
 									}
 								}
-								if (!present) {
+								if (!present) { // If student doesn't own the slot
+									it.remove();
+								}
+								else if (!itSwap.getTutorialTo().getTutorialID().equals
+										(itSwap.getInitalSwapRequest().getTutorial().getTutorialID())) { // Refuse to accept if different module
 									it.remove();
 								}
 							}
@@ -281,11 +269,12 @@ public class TimetablingAgent extends Agent{
 						}
 						if ((slotsConfirmed.getSlots().size() + slotsDenied.getSlots().size()) == slotsRequested.getSlots().size()) { // Increase step if received all replies
 							
-							// For confirmed slots -- Swaps slots that have already been confirmed on the message board, where swap requester has the slots
+							// Updating the slots for the Requester Agent and the Poster Agent
 							for (SwapFinal swap : slotsConfirmed.getSlots()) {
+								
 								// Update requester agent to the new slot
-								Iterator<AID> it = StudentSlots[TutorialMap.get(swap.getTutorialTo().getTutorialID())][swap.getTutorialTo().getTutNum()].iterator();
-								//System.out.println(swap.getAgentTo().getLocalName() + " requesting to swap slot with " + swap.getInitalSwapRequest().getAgentFrom().getLocalName());
+								Iterator<AID> it = StudentSlots[TutorialMap.get(swap.getTutorialTo().getTutorialID())]
+																				[swap.getTutorialTo().getTutNum()].iterator();
 								while (it.hasNext()) {
 									AID aidRem = it.next();
 									if (aidRem.equals(swap.getAgentTo())) {
@@ -293,10 +282,12 @@ public class TimetablingAgent extends Agent{
 										break;
 									}
 								}
-								StudentSlots[TutorialMap.get(swap.getTutorialTo().getTutorialID())][swap.getTutorialTo().getTutNum()].add(swap.getInitalSwapRequest().getAgentFrom());
+								StudentSlots[TutorialMap.get(swap.getTutorialTo().getTutorialID())]
+										[swap.getTutorialTo().getTutNum()].add(swap.getInitalSwapRequest().getAgentFrom());
 								
 								// Update the initial agent on the timetable to the agreed slot
-								Iterator<AID> receiverit = StudentSlots[TutorialMap.get(swap.getInitalSwapRequest().getTutorial().getTutorialID())][swap.getInitalSwapRequest().getTutorial().getTutNum()].iterator();
+								Iterator<AID> receiverit = StudentSlots[TutorialMap.get(swap.getInitalSwapRequest().getTutorial().getTutorialID())]
+																					[swap.getInitalSwapRequest().getTutorial().getTutNum()].iterator();
 								while (receiverit.hasNext()) {
 									AID aidRem = receiverit.next();
 									if (aidRem.equals(swap.getInitalSwapRequest().getAgentFrom())) {
@@ -304,7 +295,8 @@ public class TimetablingAgent extends Agent{
 										break;
 									}
 								}
-								StudentSlots[TutorialMap.get(swap.getInitalSwapRequest().getTutorial().getTutorialID())][swap.getInitalSwapRequest().getTutorial().getTutNum()].add(swap.getAgentTo());
+								StudentSlots[TutorialMap.get(swap.getInitalSwapRequest().getTutorial().getTutorialID())]
+											[swap.getInitalSwapRequest().getTutorial().getTutNum()].add(swap.getAgentTo());
 							}
 							
 							step++;
@@ -350,9 +342,8 @@ public class TimetablingAgent extends Agent{
 									
 									// Checking if timetabler has student as owning slot
 									boolean found = false;
-									System.out.println("Requester agent is " + initSwap.getAgentFrom().getLocalName());
-									for (AID student : StudentSlots[TutorialMap.get(initSwap.getTutorial().getTutorialID())][initSwap.getTutorial().getTutNum()]) {
-										System.out.println("Found " + student.getLocalName());
+									for (AID student : StudentSlots
+											[TutorialMap.get(initSwap.getTutorial().getTutorialID())][initSwap.getTutorial().getTutNum()]) {
 										if (student.equals(initSwap.getAgentFrom())) {
 											found = true;
 											break;
@@ -407,7 +398,7 @@ public class TimetablingAgent extends Agent{
 							}
 						}
 						
-						happyAgents.add(currentAgent); // Don't use lists and check at end - doesn't make sense anymore (unless can queue unhappy agents for switch at end of loop)
+						happyAgents.add(currentAgent);
 						unhappyAgents.remove(currentAgent); // Remove agent
 					}
 					
@@ -470,7 +461,7 @@ public class TimetablingAgent extends Agent{
 						
 			try {
 				getContentManager().fillContent(msg, available);
-				//System.out.println("1: TT Content is: " + msg.getContent());
+				//System.out.println(getAID().getLocalName()+ " sent to " + studentAid.getLocalName() + " is "  + msg.getContent());
 				send(msg);
 			}
 			catch (CodecException ce) {
