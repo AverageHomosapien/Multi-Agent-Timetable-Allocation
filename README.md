@@ -6,6 +6,6 @@ We were given the task of allocating tutorial classes to students using the Jade
 and would attempt to switch to these slots.
 
 My approach used a TimetableAgent, which held a messageboard of tutorials. It would activate StudentAgents one-by-one by offering slots, facilitate the swapping 
-and then checking if the StudentAgents were happy with the slots they'd been given.
+and then checking if the StudentAgents were happy with the slots they'd been given. I ensured my approach was fully FIPA compliant.
 
 I fully detail my approach in the '40205163.pdf' file.
